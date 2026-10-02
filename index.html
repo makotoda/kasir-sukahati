@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sistem Kasir Toko Sukahati</title>
+    <base target="_top">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+  [v-cloak] { display: none; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #f4f6f9;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .main-wrapper {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pos-container {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px;
+  }
+
+  .pos-row {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .pos-card {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  .product-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto !important;
+    padding: 10px;
+  }
+
+  .cart-container {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto !important;
+    background-color: #f8f9fa;
+    background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  .cart-footer-fixed {
+    flex-shrink: 0;
+    background: #ffffff;
+    border-top: 2px solid #dee2e6;
+    padding: 12px 16px;
+    box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .product-card {
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
+    border: 2px solid transparent;
+  }
+  .product-card:active { transform: scale(0.96); }
+  .product-card:hover { border-color: #0d6efd; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15); }
+
+  .cursor-pointer { cursor: pointer; }
+
+  /* Scrollbar custom agar selalu terlihat jelas dan mudah di-scroll */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6c757d;
+  }
+
+  /* Thermal Receipt Styling */
+  .receipt-box {
+    background: #fff;
+    color: #212529;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px dashed #ced4da;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .receipt-divider {
+    border-top: 1px dashed #6c757d;
+    margin: 8px 0;
+  }
+  .receipt-table td {
+    padding: 3px 0;
+    vertical-align: top;
+  }
+
+  /* Quick Cash Buttons */
+  .btn-quick-cash {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    background: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-quick-cash:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #0d6efd;
+  }
+
+  /* Print Media Styles */
+  @media print {
+    /* Margin box yang diisi sendiri menggantikan header/footer bawaan browser
+       (tanggal, judul, URL, nomor halaman). Halaman default (struk) bermargin tipis
+       untuk kertas thermal; laporan bermargin normal dengan nomor halaman. */
+    @page {
+      margin: 4mm;
+      @top-left { content: ""; }
+      @top-center { content: ""; }
+      @bottom-left { content: ""; }
+      @bottom-right { content: ""; }
+    }
+    @page laporan {
+      margin: 12mm 10mm;
+      @top-left { content: ""; }
+      @top-center { content: ""; }
+      @bottom-left { content: ""; }
+      @bottom-right { content: counter(page) " / " counter(pages); font-size: 9pt; }
+    }
+    
+    .no-print {
+      display: none !important;
+    }
+    
+    /* Lepas kunci tinggi layar agar isi panjang mengalir ke semua halaman */
+    html, body, #app, .main-wrapper, .pos-container, .pos-card, .report-print-area {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    html, body, .pos-card {
+      background: #fff !important;
+      box-shadow: none !important;
+      border: none;
+    }
+    #app, .main-wrapper, .pos-card {
+      display: block;
+    }
+    
+    /* Cetak Laporan */
+    .report-print-area {
+      page: laporan;
+      font-size: 11pt;
+      color: #000;
+    }
+    .report-print-area thead {
+      position: static;
+    }
+    
+    /* Cetak Struk Kasir: saat modal struk terbuka, hanya struk yang dicetak.
+       Modal dilepas dari posisi layar (fixed/tengah/overflow) supaya struk mengalir dari pojok kiri atas kertas. */
+    #app:has(.receipt-print-area) .main-wrapper {
+      display: none !important;
+    }
+    .modal:has(.receipt-print-area),
+    .modal:has(.receipt-print-area) :is(.modal-dialog, .modal-content, .modal-body) {
+      position: static !important;
+      display: block !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      background: #fff !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .receipt-print-area {
+      width: 100%;
+      max-width: 80mm;
+      margin: 0 !important;
+      padding: 0;
+      font-size: 12px;
+      color: #000;
+      border: none;
+      box-shadow: none;
+    }
+  }
+</style>
+
+  </head>
+  <body><script>window.API_URL = "https://script.google.com/macros/s/AKfycbyM03MMemYgt5lFCieD_b4S40SlMpRVJC7Ys0hCw86p5PGFPbh4HHFT_7nB9KDEMPyEEA/exec";</script>
+    <div id="app" v-cloak>
+      
+      <!-- HALAMAN LOGIN (Hak Akses Multi-User & Cabang) -->
+      <div v-if="!isLoggedIn" class="d-flex align-items-center justify-content-center h-100 bg-light">
+        <div class="card shadow p-4" style="width: 350px; border-radius: 15px;">
+          <div class="text-center mb-4">
+            <h3 class="text-primary fw-bold"><i class="fas fa-store"></i> Toko Sukahati</h3>
+            <p class="text-muted small">Silakan masuk ke sistem kasir</p>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label text-muted small fw-bold">PIN Anda</label>
+            <input type="password" class="form-control form-control-lg text-center" v-model="pinInput" placeholder="******" inputmode="numeric" maxlength="8" autocomplete="off" autofocus @keyup.enter="login">
+          </div>
+          
+          <button class="btn btn-primary w-100 py-2 fw-bold" :disabled="isLoggingIn" @click="login">
+            <span v-if="isLoggingIn" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            {{ isLoggingIn ? 'MEMERIKSA...' : 'MASUK SISTEM' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN APP -->
+      <div v-else class="main-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm flex-shrink-0 no-print">
+          <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+              <i class="fas fa-store me-2"></i>Toko Sukahati <span v-if="userRole !== 'admin'" class="badge bg-light text-primary ms-2">{{ toko.nama }}</span>
+            </a>
+            <select v-if="userRole === 'admin'" class="form-select form-select-sm w-auto me-auto" title="Toko yang sedang dikelola" :value="toko.kode" @change="gantiToko($event.target.value)">
+              <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">{{ t.nama }}</option>
+            </select>
+            <button class="navbar-toggler" type="button" @click="mobileNavOpen = !mobileNavOpen">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" :class="{show: mobileNavOpen}" id="navbarNav">
+              <div class="navbar-nav me-auto">
+                <button class="nav-link btn text-start" :class="{active: activeTab === 'kasir'}" @click="activeTab = 'kasir'; mobileNavOpen = false"><i class="fas fa-cash-register"></i> Kasir</button>
+                <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'inventori'}" @click="activeTab = 'inventori'; mobileNavOpen = false"><i class="fas fa-boxes"></i> Inventori</button>
+                <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'laporan'}" @click="openLaporan(); mobileNavOpen = false"><i class="fas fa-chart-line"></i> Laporan</button>
+                <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'pengguna'}" @click="openPengguna(); mobileNavOpen = false"><i class="fas fa-users"></i> Pengguna</button>
+              </div>
+              <div class="d-flex align-items-center mt-2 mt-lg-0">
+                <span class="text-white me-3"><i class="fas fa-user-circle"></i> {{ namaPengguna }}</span>
+                <button class="btn btn-sm btn-outline-light" @click="logout"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Body Area -->
+        <div class="pos-container">
+          
+          <!-- MODUL KASIR -->
+          <div v-show="activeTab === 'kasir'" class="h-100" style="min-height: 0;">
+            <div class="row pos-row g-3">
+              <!-- Daftar Produk -->
+              <div class="col-md-7 d-flex flex-column h-100" style="min-height: 0;">
+                <div class="card shadow-sm pos-card">
+                  <div class="card-header bg-white border-bottom-0 pt-3 flex-shrink-0">
+                    <input type="text" class="form-control form-control-lg bg-light" placeholder="🔍 Cari nama / kode barang, Enter untuk masuk keranjang..." v-model="searchQuery" @keyup.enter="addFromSearch">
+                  </div>
+                  <div class="card-body p-2 product-grid">
+                    <div v-if="loading" class="text-center py-5">
+                       <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                    
+                    <div class="row g-2" v-else>
+                      <div class="col-4 col-md-3 col-lg-2" v-for="product in filteredProducts" :key="product.ID_Produk">
+                        <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" @click="addToCart(product)">
+                          <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
+                            <h6 class="card-title text-truncate" :title="product.Nama_Produk" style="font-size: 0.85rem;">{{ product.Nama_Produk }}</h6>
+                            <p class="card-text text-primary fw-bold mb-1" style="font-size: 0.9rem;">Rp {{ formatNumber(product.Harga_Jual) }}</p>
+                            <small class="text-muted" style="font-size: 0.7rem;">Stok: {{ product.Stok_Tersedia }}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Keranjang Belanja -->
+              <div class="col-md-5 d-flex flex-column h-100" style="min-height: 0;">
+                <div class="card shadow-sm pos-card">
+                  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-shrink-0 py-2">
+                    <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
+                    <div class="d-flex align-items-center gap-2">
+                      <button v-if="shift" class="btn btn-sm btn-outline-light py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan"><i class="fas fa-money-bill-wave me-1"></i>Kas</button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-light py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir"><i class="fas fa-lock me-1"></i>Tutup Kasir</button>
+                      <span class="badge bg-danger rounded-pill">{{ cart.length }} item</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Area Item Keranjang (Scrollable) -->
+                  <div class="card-body p-0 cart-container">
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item text-center text-muted py-5" v-if="cart.length === 0">
+                        <i class="fas fa-cart-plus fa-3x mb-3 text-secondary opacity-50"></i><br>Keranjang masih kosong
+                      </li>
+                      <li class="list-group-item py-2 px-3" v-for="(item, index) in cart" :key="item.id_produk">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="fw-bold text-truncate" style="max-width: 200px;">{{ item.nama }}</span>
+                          <span class="text-danger cursor-pointer px-1" @click="removeFromCart(index)" title="Hapus"><i class="fas fa-trash-alt"></i></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div class="input-group input-group-sm" style="width: 100px;">
+                            <button class="btn btn-outline-secondary px-2" @click="updateQty(index, -1)">-</button>
+                            <input type="number" class="form-control text-center px-1" v-model.number="item.qty" @change="validateCartQty(item)" min="1">
+                            <button class="btn btn-outline-secondary px-2" @click="updateQty(index, 1)">+</button>
+                          </div>
+                          <span class="fw-bold text-primary">Rp {{ formatNumber(item.subtotal) }}</span>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Area Kasir Bawah / Footer (Fixed, Tidak akan terdorong keluar layar) -->
+                  <div class="cart-footer-fixed">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-muted fw-bold">Total:</span>
+                      <span class="fs-4 fw-bold text-primary">Rp {{ formatNumber(totalBelanja) }}</span>
+                    </div>
+                    
+                    <div class="row g-2 mb-2">
+                      <div class="col-6">
+                        <label class="form-label small text-muted mb-0">Metode</label>
+                        <select class="form-select form-select-sm bg-light" v-model="metodePembayaran">
+                          <option value="Tunai">Tunai</option>
+                          <option value="Transfer">Transfer</option>
+                          <option value="QRIS">QRIS</option>
+                        </select>
+                      </div>
+                      <div class="col-6" v-if="metodePembayaran === 'Tunai'">
+                        <label class="form-label small text-muted mb-0">Uang Diterima</label>
+                        <input type="number" class="form-control form-control-sm bg-light fw-bold text-success" v-model.number="jumlahBayar">
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                          <button type="button" class="btn-quick-cash" @click="setQuickCash('pas')">Pas</button>
+                          <button type="button" class="btn-quick-cash" @click="setQuickCash(10000)">10rb</button>
+                          <button type="button" class="btn-quick-cash" @click="setQuickCash(20000)">20rb</button>
+                          <button type="button" class="btn-quick-cash" @click="setQuickCash(50000)">50rb</button>
+                          <button type="button" class="btn-quick-cash" @click="setQuickCash(100000)">100rb</button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-1 px-2 bg-success bg-opacity-10 rounded text-success" v-if="metodePembayaran === 'Tunai' && kembalian >= 0">
+                      <span class="fw-bold small">Kembalian:</span>
+                      <span class="fw-bold">Rp {{ formatNumber(kembalian) }}</span>
+                    </div>
+                    
+                    <button v-if="shiftDimuat && !shift" class="btn btn-primary btn-lg w-100 fw-bold py-2 shadow-sm" @click="bukaKasir">
+                      <i class="fas fa-lock-open me-2"></i>BUKA KASIR
+                    </button>
+                    <button v-else class="btn btn-success btn-lg w-100 fw-bold py-2 shadow-sm" :disabled="!canCheckout || isProcessing" @click="checkout">
+                      <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                      {{ isProcessing ? 'MEMPROSES...' : 'BAYAR SEKARANG' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODUL INVENTORI (Khusus Admin) -->
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'inventori'" class="h-100" style="min-height: 0;">
+            <div class="card shadow-sm pos-card">
+              <div class="card-header bg-white py-2 flex-shrink-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <h5 class="mb-0 text-primary"><i class="fas fa-boxes me-2"></i> Master Data Barang</h5>
+                  <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm" :class="inventoryLowOnly ? 'btn-danger' : 'btn-outline-danger'" @click="inventoryLowOnly = !inventoryLowOnly" :title="'Tampilkan hanya barang yang stoknya di ' + toko.nama + ' sudah menyentuh stok minimum'">
+                      <i class="fas fa-exclamation-triangle me-1"></i> Stok menipis ({{ products.filter(menipis).length }})
+                    </button>
+                    <button class="btn btn-success btn-sm fw-bold" @click="openPurchaseModal"><i class="fas fa-file-invoice-dollar me-1"></i> Faktur Pembelian (Kulakan)</button>
+                    <button class="btn btn-primary btn-sm" @click="openAddProduct"><i class="fas fa-plus"></i> Tambah Barang</button>
+                  </div>
+                </div>
+                <div class="row g-2">
+                  <div class="col-md-8 col-sm-12">
+                    <input type="text" class="form-control form-control-sm bg-light" placeholder="🔍 Cari nama barang / kode / kategori..." v-model="inventorySearchQuery">
+                  </div>
+                  <div class="col-md-4 col-sm-12">
+                    <select class="form-select form-select-sm bg-light" v-model="inventoryCategoryFilter">
+                      <option value="">Semua Kategori ({{ products.length }} produk)</option>
+                      <option v-for="kat in categoriesList" :key="kat" :value="kat">{{ kat }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                 <div class="table-responsive">
+                   <table class="table table-hover align-middle mb-0">
+                     <thead class="table-light sticky-top">
+                       <tr>
+                         <th class="ps-3">ID</th>
+                         <th>Nama Produk</th>
+                         <th>Kategori</th>
+                         <th>H. Beli</th>
+                         <th>H. Jual</th>
+                         <th class="text-center small" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}" :title="'Stok di ' + t.nama">{{ t.nama }}</th>
+                         <th class="text-center">Aksi</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <tr v-for="product in filteredInventoryProducts" :key="product.ID_Produk">
+                         <td class="ps-3 text-muted small">{{ product.ID_Produk }}</td>
+                         <td class="fw-bold">{{ product.Nama_Produk }}</td>
+                         <td><span class="badge bg-secondary">{{ product.Kategori }}</span></td>
+                         <td>Rp {{ formatNumber(product.Harga_Beli) }}</td>
+                         <td class="text-primary fw-bold">Rp {{ formatNumber(product.Harga_Jual) }}</td>
+                         <td class="text-center" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}">
+                            <span class="badge rounded-pill" :class="product.Stok[t.kode] > product.Stok_Minimum ? 'bg-success' : 'bg-danger'" :title="'Stok minimum: ' + product.Stok_Minimum">
+                               {{ product.Stok[t.kode] }}
+                            </span>
+                         </td>
+                         <td class="text-center text-nowrap">
+                           <button class="btn btn-sm btn-outline-success me-1" @click="openRestockModal(product)" :title="'Restock / Barang Masuk ke ' + toko.nama"><i class="fas fa-boxes me-1"></i>+Stok</button>
+                           <button class="btn btn-sm btn-outline-secondary me-1" @click="openTransferModal(product)" :disabled="product.Stok_Tersedia <= 0" :title="'Transfer stok dari ' + toko.nama + ' ke toko lain'"><i class="fas fa-exchange-alt"></i></button>
+                           <button class="btn btn-sm btn-outline-primary me-1" @click="openEditProduct(product)" title="Edit Barang"><i class="fas fa-edit"></i></button>
+                           <button class="btn btn-sm btn-outline-danger" @click="confirmDeleteProduct(product)" title="Hapus Barang"><i class="fas fa-trash-alt"></i></button>
+                         </td>
+                       </tr>
+                       <tr v-if="filteredInventoryProducts.length === 0">
+                         <td :colspan="6 + daftarToko.length" class="text-center py-4 text-muted">
+                           <i class="fas fa-search me-1"></i> Tidak ada produk yang sesuai dengan pencarian / filter kategori.
+                         </td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODUL PENGGUNA (Khusus Admin) -->
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'pengguna'" class="h-100" style="min-height: 0;">
+            <div class="card shadow-sm pos-card">
+              <div class="card-header bg-white py-2 flex-shrink-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <h5 class="mb-0 text-primary"><i class="fas fa-users me-2"></i> Pengguna</h5>
+                  <div class="small text-muted">Tiap orang punya PIN sendiri, sehingga penjualan dan perubahan stok tercatat atas namanya.</div>
+                </div>
+                <button class="btn btn-primary btn-sm" @click="openUserModal()"><i class="fas fa-user-plus"></i> Tambah Pengguna</button>
+              </div>
+              <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="ps-3">Nama</th>
+                        <th>Peran</th>
+                        <th>Status</th>
+                        <th>PIN</th>
+                        <th class="text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="u in users" :key="u.id" :class="{'text-muted': !u.aktif}">
+                        <td class="ps-3 fw-bold">{{ u.nama }}</td>
+                        <td><span v-if="u.toko === 'ADMIN'" class="badge bg-dark">Admin (semua toko)</span><span v-else>Kasir {{ namaToko(u.toko) }}</span></td>
+                        <td><span class="badge" :class="u.aktif ? 'bg-success' : 'bg-secondary'">{{ u.aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
+                        <td>
+                          <span v-if="u.pinPendek" class="badge bg-warning text-dark" title="PIN di bawah 6 angka mudah ditebak. Klik Ubah untuk menggantinya."><i class="fas fa-exclamation-triangle me-1"></i>PIN pendek, sebaiknya diganti</span>
+                          <span v-else class="text-muted">&bull;&bull;&bull;&bull;&bull;&bull;</span>
+                        </td>
+                        <td class="text-center"><button class="btn btn-sm btn-outline-primary" @click="openUserModal(u)"><i class="fas fa-edit me-1"></i>Ubah</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODUL LAPORAN (Khusus Admin) -->
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'laporan'" class="h-100" style="min-height: 0;">
+            <div class="card shadow-sm pos-card">
+              <div class="card-header bg-white py-2 flex-shrink-0 d-flex justify-content-between align-items-center no-print">
+                <div class="btn-group btn-group-sm">
+                  <button class="btn" :class="laporanSubTab === 'ringkasan' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('ringkasan')">
+                    <i class="fas fa-chart-line me-1"></i> Ringkasan
+                  </button>
+                  <button class="btn" :class="laporanSubTab === 'transaksi' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('transaksi')">
+                    <i class="fas fa-receipt me-1"></i> Penjualan
+                  </button>
+                  <button class="btn" :class="laporanSubTab === 'pembelian' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('pembelian')">
+                    <i class="fas fa-truck-loading me-1"></i> Pembelian (Kulakan)
+                  </button>
+                  <button class="btn" :class="laporanSubTab === 'mutasi' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('mutasi')">
+                    <i class="fas fa-history me-1"></i> Audit Mutasi Stok
+                  </button>
+                  <button class="btn" :class="laporanSubTab === 'shift' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('shift')">
+                    <i class="fas fa-cash-register me-1"></i> Tutup Kasir
+                  </button>
+                  <button class="btn" :class="laporanSubTab === 'kas' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('kas')">
+                    <i class="fas fa-money-bill-wave me-1"></i> Kas
+                  </button>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-dark" @click="printReport" title="Cetak Laporan / Simpan PDF">
+                    <i class="fas fa-print me-1"></i> Cetak Laporan
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" @click="loadLaporan(laporanSubTab)" title="Refresh Data">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body p-0 flex-grow-1 report-print-area" style="overflow-y: auto; min-height: 0;">
+                 <div class="d-none d-print-block p-2 text-center border-bottom mb-2">
+                   <h4 class="fw-bold mb-0">LAPORAN {{ laporanSubTab.toUpperCase() }} - TOKO SUKAHATI</h4>
+                   <small class="text-muted">Dicetak pada: {{ formatDate(new Date()) }} &bull; Toko: {{ laporanFilter.cabang ? namaToko(laporanFilter.cabang) : 'Semua toko' }}<span v-if="laporanFilter.dari || laporanFilter.sampai"> &bull; Periode: {{ laporanFilter.dari || 'awal' }} s.d. {{ laporanFilter.sampai || 'sekarang' }}</span></small>
+                 </div>
+                 
+                 <div class="d-flex flex-wrap align-items-center gap-2 p-2 border-bottom bg-light no-print">
+                   <select class="form-select form-select-sm w-auto" v-model="laporanFilter.cabang" @change="loadLaporan(laporanSubTab)">
+                     <option value="">Semua toko</option>
+                     <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">{{ t.nama }}</option>
+                   </select>
+                   <label class="small text-muted mb-0" for="filterDari">Dari</label>
+                   <input type="date" id="filterDari" class="form-control form-control-sm w-auto" v-model="laporanFilter.dari" :max="laporanFilter.sampai" @change="loadLaporan(laporanSubTab)">
+                   <label class="small text-muted mb-0" for="filterSampai">s.d.</label>
+                   <input type="date" id="filterSampai" class="form-control form-control-sm w-auto" v-model="laporanFilter.sampai" :min="laporanFilter.dari" @change="loadLaporan(laporanSubTab)">
+                   <button class="btn btn-sm btn-outline-primary" @click="filterHariIni">Hari Ini</button>
+                   <button class="btn btn-sm btn-outline-secondary" @click="resetFilterLaporan" title="Hapus semua filter"><i class="fas fa-times"></i> Reset</button>
+                   <select v-if="laporanSubTab === 'mutasi'" class="form-select form-select-sm w-auto" v-model="laporanFilter.tipe" @change="loadLaporan('mutasi')">
+                     <option value="">Semua jenis mutasi</option>
+                     <option>PENJUALAN</option>
+                     <option>BARANG MASUK</option>
+                     <option>TRANSFER KELUAR</option>
+                     <option>TRANSFER MASUK</option>
+                     <option>BATAL PENJUALAN</option>
+                     <option>PENYESUAIAN</option>
+                     <option>STOK AWAL</option>
+                     <option>HAPUS</option>
+                   </select>
+                   <input v-if="laporanSubTab === 'mutasi'" type="search" class="form-control form-control-sm" style="max-width: 340px;" placeholder="🔍 Barang / kode / no. transaksi, lalu Enter" v-model="laporanFilter.cari" @change="loadLaporan('mutasi')">
+                 </div>
+                 <div v-if="!loadingLaporan && ringkasanLaporan" class="px-3 py-1 small text-muted border-bottom">{{ ringkasanLaporan }}</div>
+
+                 <div v-if="loadingLaporan" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                 </div>
+                 
+                 <!-- RINGKASAN: angka utama + rincian per hari / toko / metode, barang terlaris, stok menipis -->
+                 <div class="p-3" v-else-if="laporanSubTab === 'ringkasan' && ringkasan" style="font-variant-numeric: tabular-nums;">
+                   <div class="row g-2 mb-3">
+                     <div class="col-6 col-lg-3" v-for="k in kartuRingkasan" :key="k.label">
+                       <div class="border rounded bg-white p-3 h-100">
+                         <div class="small text-muted">{{ k.label }}</div>
+                         <div class="fs-4 fw-semibold text-nowrap" style="font-variant-numeric: normal;">{{ k.nilai }}</div>
+                         <div class="small text-muted">{{ k.catatan }}</div>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div class="row g-3">
+                     <div class="col-lg-6">
+                       <h6 class="fw-bold">Omzet per hari <span class="fw-normal text-muted small">(31 hari terbaru pada filter)</span></h6>
+                       <table class="table table-sm table-striped mb-0">
+                         <thead><tr><th>Tanggal</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th><th class="text-end">Laba kotor</th></tr></thead>
+                         <tbody>
+                           <tr v-for="h in ringkasan.perHari" :key="h.kunci">
+                             <td>{{ formatTanggal(h.kunci) }}</td>
+                             <td class="text-end">{{ h.transaksi }}</td>
+                             <td class="text-end">Rp {{ formatNumber(h.omzet) }}</td>
+                             <td class="text-end">Rp {{ formatNumber(h.laba) }}</td>
+                           </tr>
+                           <tr v-if="ringkasan.perHari.length === 0"><td colspan="4" class="text-center text-muted py-3">Belum ada penjualan pada filter ini.</td></tr>
+                         </tbody>
+                       </table>
+                     </div>
+
+                     <div class="col-lg-6">
+                       <h6 class="fw-bold">Omzet per toko</h6>
+                       <table class="table table-sm table-striped mb-3">
+                         <thead><tr><th>Toko</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th><th class="text-end">Laba kotor</th></tr></thead>
+                         <tbody>
+                           <tr v-for="t in ringkasan.perToko" :key="t.kunci">
+                             <td>{{ namaToko(t.kunci) }}</td>
+                             <td class="text-end">{{ t.transaksi }}</td>
+                             <td class="text-end">Rp {{ formatNumber(t.omzet) }}</td>
+                             <td class="text-end">Rp {{ formatNumber(t.laba) }}</td>
+                           </tr>
+                           <tr v-if="ringkasan.perToko.length === 0"><td colspan="4" class="text-center text-muted py-3">Belum ada penjualan pada filter ini.</td></tr>
+                         </tbody>
+                       </table>
+
+                       <h6 class="fw-bold">Omzet per metode bayar</h6>
+                       <table class="table table-sm table-striped mb-0">
+                         <thead><tr><th>Metode</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th></tr></thead>
+                         <tbody>
+                           <tr v-for="m in ringkasan.perMetode" :key="m.kunci">
+                             <td>{{ m.kunci }}</td>
+                             <td class="text-end">{{ m.transaksi }}</td>
+                             <td class="text-end">Rp {{ formatNumber(m.omzet) }}</td>
+                           </tr>
+                           <tr v-if="ringkasan.perMetode.length === 0"><td colspan="3" class="text-center text-muted py-3">Belum ada penjualan pada filter ini.</td></tr>
+                         </tbody>
+                       </table>
+                     </div>
+
+                     <div class="col-lg-6">
+                       <h6 class="fw-bold">Barang terlaris <span class="fw-normal text-muted small">(10 teratas menurut jumlah terjual)</span></h6>
+                       <table class="table table-sm table-striped mb-0">
+                         <thead><tr><th>#</th><th>Barang</th><th class="text-end">Terjual</th><th class="text-end">Omzet</th></tr></thead>
+                         <tbody>
+                           <tr v-for="(b, i) in ringkasan.terlaris" :key="b.id_produk">
+                             <td class="text-muted">{{ i + 1 }}</td>
+                             <td>{{ b.nama }} <span class="text-muted small">({{ b.id_produk }})</span></td>
+                             <td class="text-end">{{ b.qty }}</td>
+                             <td class="text-end">Rp {{ formatNumber(b.omzet) }}</td>
+                           </tr>
+                           <tr v-if="ringkasan.terlaris.length === 0"><td colspan="4" class="text-center text-muted py-3">Belum ada penjualan pada filter ini.</td></tr>
+                         </tbody>
+                       </table>
+                     </div>
+
+                     <div class="col-lg-6">
+                       <h6 class="fw-bold">Stok menipis / perlu dibeli <span class="fw-normal text-muted small">(stok saat ini &le; stok minimum)</span></h6>
+                       <table class="table table-sm table-striped mb-2">
+                         <thead><tr><th>Toko</th><th class="text-end">Jumlah barang menipis</th></tr></thead>
+                         <tbody>
+                           <tr v-for="t in tokoLaporan" :key="t.kode">
+                             <td>{{ t.nama }}</td>
+                             <td class="text-end">{{ stokMenipis.filter(s => s.kode === t.kode).length }}</td>
+                           </tr>
+                         </tbody>
+                       </table>
+                       <div v-if="!laporanFilter.cabang" class="small text-muted"><i class="fas fa-info-circle me-1"></i>Pilih satu toko di filter untuk melihat daftar barangnya.</div>
+                       <table v-else class="table table-sm table-striped mb-0">
+                         <thead><tr><th>Barang</th><th>Kategori</th><th class="text-end">Stok</th><th class="text-end">Minimum</th></tr></thead>
+                         <tbody>
+                           <tr v-for="s in stokMenipis" :key="s.id">
+                             <td>{{ s.nama }} <span class="text-muted small">({{ s.id }})</span></td>
+                             <td>{{ s.kategori }}</td>
+                             <td class="text-end fw-bold">{{ s.stok }}</td>
+                             <td class="text-end">{{ s.minimum }}</td>
+                           </tr>
+                           <tr v-if="stokMenipis.length === 0"><td colspan="4" class="text-center text-muted py-3">Tidak ada barang yang menipis di toko ini.</td></tr>
+                         </tbody>
+                       </table>
+                     </div>
+                   </div>
+                 </div>
+
+                 <!-- TABEL RIWAYAT TRANSAKSI PENJUALAN -->
+                 <div class="table-responsive" v-else-if="laporanSubTab === 'transaksi'">
+                   <table class="table table-striped table-hover mb-0">
+                     <thead class="table-dark sticky-top">
+                       <tr>
+                         <th class="ps-3">ID Transaksi</th>
+                         <th>Waktu</th>
+                         <th>Kasir</th>
+                         <th>Toko</th>
+                         <th>Metode</th>
+                         <th class="text-end">Laba Kotor</th>
+                         <th class="text-end pe-3">Total Belanja</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <template v-for="trx in transactions" :key="trx.ID_Transaksi">
+                       <tr class="cursor-pointer" :class="{'text-decoration-line-through': trx.Status === 'BATAL'}" title="Klik untuk melihat rincian barang" @click="toggleDetail('transaksi', trx.ID_Transaksi)">
+                         <td class="ps-3 fw-bold" :class="trx.Status === 'BATAL' ? 'text-muted' : 'text-primary'"><i class="fas fa-fw small" :class="detailId === trx.ID_Transaksi ? 'fa-chevron-down' : 'fa-chevron-right'"></i> {{ trx.ID_Transaksi }} <span v-if="trx.Status === 'BATAL'" class="badge bg-danger">BATAL</span></td>
+                         <td>{{ formatDate(trx.Waktu_Transaksi) }}</td>
+                         <td>{{ trx.Kasir }}</td>
+                         <td>{{ namaToko(trx.Cabang) }}</td>
+                         <td><span class="badge bg-info text-dark">{{ trx.Metode_Pembayaran }}</span></td>
+                         <td class="text-end">{{ laba(trx) === null ? '-' : 'Rp ' + formatNumber(laba(trx)) }}</td>
+                         <td class="text-end pe-3 fw-bold">Rp {{ formatNumber(trx.Total_Belanja) }}</td>
+                       </tr>
+                       <tr v-if="detailId === trx.ID_Transaksi">
+                         <td colspan="7" class="bg-light px-4 py-3">
+                           <div v-if="loadingDetail" class="text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+                           <div v-else-if="detailItems.length === 0" class="text-muted small">Rincian barang tidak ditemukan.</div>
+                           <table v-else class="table table-sm table-bordered bg-white mb-2">
+                             <thead>
+                               <tr><th>Barang</th><th class="text-end">Harga Jual</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
+                             </thead>
+                             <tbody>
+                               <tr v-for="it in detailItems" :key="it.id_produk">
+                                 <td>{{ it.nama }} <span class="text-muted small">({{ it.id_produk }})</span></td>
+                                 <td class="text-end">Rp {{ formatNumber(it.harga) }}</td>
+                                 <td class="text-center">{{ it.qty }}</td>
+                                 <td class="text-end fw-bold">Rp {{ formatNumber(it.subtotal) }}</td>
+                               </tr>
+                             </tbody>
+                           </table>
+                           <div class="small text-muted">Dibayar: <strong>Rp {{ formatNumber(trx.Jumlah_Bayar) }}</strong> &bull; Kembalian: <strong>Rp {{ formatNumber(trx.Kembalian) }}</strong><span v-if="laba(trx) !== null"> &bull; Modal barang: <strong>Rp {{ formatNumber(trx.Total_Modal) }}</strong></span></div>
+                           <div v-if="trx.Status === 'BATAL'" class="small text-danger mt-1"><i class="fas fa-ban me-1"></i>Dibatalkan {{ trx.Keterangan_Batal }}</div>
+                           <button v-else class="btn btn-sm btn-outline-danger mt-2 no-print" @click="batalkanTransaksi(trx)"><i class="fas fa-ban me-1"></i> Batalkan Transaksi</button>
+                         </td>
+                       </tr>
+                       </template>
+                       <tr v-if="!transactions || transactions.length === 0">
+                         <td colspan="7" class="text-center py-4 text-muted">{{ laporanFilter.dari || laporanFilter.sampai ? 'Tidak ada penjualan pada rentang tanggal ini.' : 'Belum ada riwayat transaksi penjualan.' }}</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+
+                 <!-- TABEL RIWAYAT FAKTUR PEMBELIAN (KULAKAN) -->
+                 <div class="table-responsive" v-else-if="laporanSubTab === 'pembelian'">
+                   <table class="table table-striped table-hover mb-0">
+                     <thead class="table-dark sticky-top">
+                       <tr>
+                         <th class="ps-3">ID Pembelian</th>
+                         <th>No. Faktur Agen</th>
+                         <th>Waktu</th>
+                         <th>Supplier / Agen</th>
+                         <th>Toko</th>
+                         <th>Status</th>
+                         <th class="text-end pe-3">Total Tagihan</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <template v-for="pb in purchases" :key="pb.ID_Pembelian">
+                       <tr class="cursor-pointer" title="Klik untuk melihat rincian barang" @click="toggleDetail('pembelian', pb.ID_Pembelian)">
+                         <td class="ps-3 fw-bold text-success"><i class="fas fa-fw small" :class="detailId === pb.ID_Pembelian ? 'fa-chevron-down' : 'fa-chevron-right'"></i> {{ pb.ID_Pembelian }}</td>
+                         <td class="fw-bold">{{ pb.No_Faktur_Supplier }}</td>
+                         <td>{{ formatDate(pb.Waktu) }}</td>
+                         <td><span class="badge bg-secondary">{{ pb.Supplier }}</span></td>
+                         <td>{{ namaToko(pb.Cabang) }}</td>
+                         <td>
+                           <span class="badge" :class="pb.Status_Bayar === 'LUNAS' ? 'bg-success' : 'bg-warning text-dark'">
+                             {{ pb.Status_Bayar }}
+                           </span>
+                         </td>
+                         <td class="text-end pe-3 fw-bold text-danger">Rp {{ formatNumber(pb.Total_Tagihan) }}</td>
+                       </tr>
+                       <tr v-if="detailId === pb.ID_Pembelian">
+                         <td colspan="7" class="bg-light px-4 py-3">
+                           <div v-if="loadingDetail" class="text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+                           <div v-else-if="detailItems.length === 0" class="text-muted small">Rincian barang tidak ditemukan.</div>
+                           <table v-else class="table table-sm table-bordered bg-white mb-2">
+                             <thead>
+                               <tr><th>Barang</th><th class="text-end">Harga Beli</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
+                             </thead>
+                             <tbody>
+                               <tr v-for="it in detailItems" :key="it.id_produk">
+                                 <td>{{ it.nama }} <span class="text-muted small">({{ it.id_produk }})</span></td>
+                                 <td class="text-end">Rp {{ formatNumber(it.harga) }}</td>
+                                 <td class="text-center">{{ it.qty }}</td>
+                                 <td class="text-end fw-bold">Rp {{ formatNumber(it.subtotal) }}</td>
+                               </tr>
+                             </tbody>
+                           </table>
+                           <div class="small text-muted">Catatan: {{ pb.Catatan || '-' }} &bull; Dicatat oleh: {{ pb.User }}</div>
+                         </td>
+                       </tr>
+                       </template>
+                       <tr v-if="!purchases || purchases.length === 0">
+                         <td colspan="7" class="text-center py-4 text-muted">{{ laporanFilter.dari || laporanFilter.sampai ? 'Tidak ada pembelian pada rentang tanggal ini.' : 'Belum ada riwayat faktur pembelian / kulakan.' }}</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+
+                 <!-- TABEL TUTUP KASIR (SHIFT) -->
+                 <div class="table-responsive" v-else-if="laporanSubTab === 'shift'">
+                   <table class="table table-striped table-hover mb-0">
+                     <thead class="table-dark sticky-top">
+                       <tr>
+                         <th class="ps-3">Toko</th>
+                         <th>Dibuka</th>
+                         <th>Ditutup</th>
+                         <th>Oleh</th>
+                         <th class="text-center">Transaksi</th>
+                         <th class="text-end">Modal Awal</th>
+                         <th class="text-end">Tunai</th>
+                         <th class="text-end">Non-Tunai</th>
+                         <th class="text-end">Kas Masuk</th>
+                         <th class="text-end">Kas Keluar</th>
+                         <th class="text-end">Kas Seharusnya</th>
+                         <th class="text-end">Kas Fisik</th>
+                         <th class="text-end">Selisih</th>
+                         <th>Catatan</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <tr v-for="s in shifts" :key="s.ID_Shift">
+                         <td class="ps-3 fw-bold">{{ namaToko(s.Cabang) }}</td>
+                         <td>{{ formatDate(s.Waktu_Buka) }}</td>
+                         <td><span v-if="s.Waktu_Tutup">{{ formatDate(s.Waktu_Tutup) }}</span><span v-else class="badge bg-success">Masih buka</span></td>
+                         <td>{{ s.Kasir }}</td>
+                         <td class="text-center">{{ s.Waktu_Tutup ? s.Jumlah_Transaksi : '-' }}</td>
+                         <td class="text-end">Rp {{ formatNumber(s.Modal_Awal) }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Penjualan_Tunai) : '-' }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Penjualan_NonTunai) : '-' }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Kas_Masuk) : '-' }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Kas_Keluar) : '-' }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Kas_Seharusnya) : '-' }}</td>
+                         <td class="text-end">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Kas_Fisik) : '-' }}</td>
+                         <td class="text-end fw-bold" :class="Number(s.Selisih) < 0 ? 'text-danger' : (Number(s.Selisih) > 0 ? 'text-primary' : 'text-success')">{{ s.Waktu_Tutup ? 'Rp ' + formatNumber(s.Selisih) : '-' }}</td>
+                         <td>{{ s.Catatan }}</td>
+                       </tr>
+                       <tr v-if="shifts.length === 0">
+                         <td colspan="14" class="text-center py-4 text-muted">Belum ada riwayat buka/tutup kasir pada filter ini.</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+
+                 <!-- TABEL KAS MASUK / KELUAR -->
+                 <div class="table-responsive" v-else-if="laporanSubTab === 'kas'">
+                   <table class="table table-striped table-hover mb-0">
+                     <thead class="table-dark sticky-top">
+                       <tr>
+                         <th class="ps-3">Waktu</th>
+                         <th>Toko</th>
+                         <th>Jenis</th>
+                         <th class="text-end">Jumlah</th>
+                         <th>Keterangan</th>
+                         <th>Oleh</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <tr v-for="k in kasList" :key="k.ID_Kas">
+                         <td class="ps-3 small text-muted">{{ formatDate(k.Waktu) }}</td>
+                         <td>{{ namaToko(k.Cabang) }}</td>
+                         <td>
+                           <span class="badge" :class="k.Jenis === 'MASUK' ? 'bg-success' : 'bg-danger'">
+                             <i class="fas me-1" :class="k.Jenis === 'MASUK' ? 'fa-arrow-down' : 'fa-arrow-up'"></i>{{ k.Jenis === 'MASUK' ? 'Kas masuk' : 'Kas keluar' }}
+                           </span>
+                         </td>
+                         <td class="text-end fw-bold">Rp {{ formatNumber(k.Jumlah) }}</td>
+                         <td>{{ k.Keterangan }}</td>
+                         <td>{{ k.User }}</td>
+                       </tr>
+                       <tr v-if="kasList.length === 0">
+                         <td colspan="6" class="text-center py-4 text-muted">Belum ada catatan kas masuk/keluar pada filter ini.</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+
+                 <!-- TABEL AUDIT MUTASI STOK -->
+                 <div class="table-responsive" v-else-if="laporanSubTab === 'mutasi'">
+                   <table class="table table-striped table-hover mb-0">
+                     <thead class="table-dark sticky-top">
+                       <tr>
+                         <th class="ps-3">Waktu</th>
+                         <th>Toko</th>
+                         <th>Barang</th>
+                         <th>Jenis Mutasi</th>
+                         <th class="text-center">Perubahan</th>
+                         <th>Stok (Awal &rarr; Akhir)</th>
+                         <th>Keterangan</th>
+                         <th>User</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       <tr v-for="log in (stockLogs || [])" :key="log.ID_Log">
+                         <td class="ps-3 small text-muted">{{ formatDate(log.Waktu) }}</td>
+                         <td>{{ namaToko(log.Cabang) }}</td>
+                         <td class="fw-bold">{{ log.Nama_Produk }}</td>
+                         <td>
+                           <span class="badge" :class="log.Tipe_Mutasi === 'BARANG MASUK' ? 'bg-success' : (log.Tipe_Mutasi === 'PENJUALAN' ? 'bg-danger' : 'bg-warning text-dark')">
+                             {{ log.Tipe_Mutasi }}
+                           </span>
+                         </td>
+                         <td class="text-center fw-bold" :class="Number(log.Qty) > 0 ? 'text-success' : (Number(log.Qty) < 0 ? 'text-danger' : 'text-primary')">
+                           {{ formatQty(log.Qty) }}
+                         </td>
+                         <td>{{ log.Stok_Awal }} &rarr; <span class="fw-bold">{{ log.Stok_Akhir }}</span></td>
+                         <td>{{ log.Keterangan }}</td>
+                         <td><span class="badge bg-light text-dark border">{{ log.User }}</span></td>
+                       </tr>
+                       <tr v-if="!stockLogs || stockLogs.length === 0">
+                         <td colspan="8" class="text-center py-4 text-muted">{{ laporanFilter.cabang || laporanFilter.tipe || laporanFilter.cari || laporanFilter.dari || laporanFilter.sampai ? 'Tidak ada mutasi yang cocok dengan filter.' : 'Belum ada catatan mutasi stok.' }}</td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- MODAL TAMBAH / UBAH PENGGUNA -->
+      <div v-if="showUserModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white py-3">
+              <h5 class="modal-title fw-bold"><i class="fas fa-user me-2"></i>{{ userForm.id ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h5>
+              <button type="button" class="btn-close btn-close-white" @click="showUserModal = false"></button>
+            </div>
+            <form @submit.prevent="saveUserSubmit">
+              <div class="modal-body p-4">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold" for="userNama">Nama <span class="text-danger">*</span></label>
+                  <input type="text" id="userNama" class="form-control" v-model="userForm.nama" placeholder="Nama orangnya, mis. Wayan" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold" for="userToko">Peran <span class="text-danger">*</span></label>
+                  <select id="userToko" class="form-select" v-model="userForm.toko" required>
+                    <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">Kasir {{ t.nama }}</option>
+                    <option value="ADMIN">Admin (mengelola semua toko)</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold" for="userPin">PIN <span v-if="!userForm.id" class="text-danger">*</span></label>
+                  <input type="text" id="userPin" class="form-control" v-model.trim="userForm.pin" inputmode="numeric" pattern="[1-9][0-9]{5,7}" maxlength="8" autocomplete="off" :required="!userForm.id" :placeholder="userForm.id ? 'Kosongkan bila PIN tidak diganti' : '6-8 angka'">
+                  <div class="form-text">6&ndash;8 angka, tidak diawali 0, dan berbeda dari PIN pengguna lain.</div>
+                </div>
+                <div class="form-check" v-if="userForm.id">
+                  <input type="checkbox" id="userAktif" class="form-check-input" v-model="userForm.aktif">
+                  <label class="form-check-label" for="userAktif">Aktif (hilangkan centang untuk mencabut akses orang ini)</label>
+                </div>
+              </div>
+              <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary" @click="showUserModal = false">Batal</button>
+                <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingUser">
+                  <span v-if="isSavingUser" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  {{ isSavingUser ? 'Menyimpan...' : 'Simpan' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL TAMBAH / EDIT BARANG -->
+      <div v-if="showProductModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white py-3">
+              <h5 class="modal-title fw-bold">
+                <i :class="productForm.isEdit ? 'fas fa-edit' : 'fas fa-plus-circle'" class="me-2"></i>
+                {{ productForm.isEdit ? 'Edit Data Barang' : 'Tambah Barang Baru' }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeProductModal"></button>
+            </div>
+            <form @submit.prevent="saveProductSubmit">
+              <div class="modal-body p-4">
+                <div class="mb-3" v-if="productForm.isEdit">
+                  <label class="form-label small fw-bold text-muted">ID Produk</label>
+                  <input type="text" class="form-control bg-light" v-model="productForm.ID_Produk" readonly>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Nama Produk <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" v-model="productForm.Nama_Produk" placeholder="Contoh: Aqua 600ml" required autofocus>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Kategori</label>
+                  <input type="text" class="form-control" list="kategoriOptions" v-model="productForm.Kategori" placeholder="Pilih atau ketik kategori baru">
+                  <datalist id="kategoriOptions">
+                    <option v-for="kat in categoriesList" :key="kat" :value="kat"></option>
+                  </datalist>
+                </div>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Harga Beli (Modal)</label>
+                    <div class="input-group">
+                      <span class="input-group-text small">Rp</span>
+                      <input type="number" class="form-control" v-model.number="productForm.Harga_Beli">
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Harga Jual <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text small">Rp</span>
+                      <input type="number" class="form-control fw-bold text-primary" v-model.number="productForm.Harga_Jual" required>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row g-2 mb-2">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Stok di {{ toko.nama }}</label>
+                    <input type="number" class="form-control" v-model.number="productForm.Stok_Tersedia">
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Stok Minimum (tiap toko)</label>
+                    <input type="number" class="form-control" v-model.number="productForm.Stok_Minimum" min="0">
+                    <div class="form-text">Ditandai menipis bila stok &le; angka ini. 0 = tanpa peringatan.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary" @click="closeProductModal">Batal</button>
+                <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingProduct">
+                  <span v-if="isSavingProduct" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  {{ isSavingProduct ? 'Menyimpan...' : 'Simpan Barang' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL RESTOCK / TAMBAH STOK MASUK -->
+      <div v-if="showRestockModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-success text-white py-3">
+              <h5 class="modal-title fw-bold">
+                <i class="fas fa-boxes me-2"></i> Tambah Stok Masuk (Restock)
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeRestockModal"></button>
+            </div>
+            <form @submit.prevent="submitRestock">
+              <div class="modal-body p-4">
+                <div class="alert alert-light border mb-3">
+                  <div class="fw-bold text-dark fs-5">{{ restockForm.nama_produk }}</div>
+                  <div class="text-muted small">ID: {{ restockForm.id_produk }} &bull; Toko: <strong>{{ toko.nama }}</strong> &bull; Stok saat ini: <strong class="text-primary">{{ restockForm.stok_sekarang }}</strong> unit</div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Jumlah Barang Masuk (+Qty) <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control form-control-lg fw-bold text-success" v-model.number="restockForm.qty" min="1" required autofocus>
+                  <div class="form-text">Stok akhir setelah ditambah: <strong>{{ Number(restockForm.stok_sekarang) + Number(restockForm.qty || 0) }}</strong> unit</div>
+                </div>
+
+                <div class="mb-2">
+                  <label class="form-label small fw-bold">Keterangan / Sumber Barang</label>
+                  <input type="text" class="form-control" v-model="restockForm.keterangan" placeholder="Contoh: Kulakan Agen Jaya / Barang Masuk Baru">
+                </div>
+              </div>
+              <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary" @click="closeRestockModal">Batal</button>
+                <button type="submit" class="btn btn-success fw-bold px-4" :disabled="isSavingRestock">
+                  <span v-if="isSavingRestock" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  {{ isSavingRestock ? 'Menyimpan...' : 'Tambah ke Stok' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL TRANSFER STOK ANTAR TOKO -->
+      <div v-if="showTransferModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-secondary text-white py-3">
+              <h5 class="modal-title fw-bold">
+                <i class="fas fa-exchange-alt me-2"></i> Transfer Stok Antar Toko
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="showTransferModal = false"></button>
+            </div>
+            <form @submit.prevent="submitTransfer">
+              <div class="modal-body p-4">
+                <div class="alert alert-light border mb-3">
+                  <div class="fw-bold text-dark fs-5">{{ transferForm.nama_produk }}</div>
+                  <div class="text-muted small">ID: {{ transferForm.id_produk }} &bull; Dari: <strong>{{ toko.nama }}</strong> &bull; Stok: <strong class="text-primary">{{ transferForm.stok[toko.kode] }}</strong> unit</div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Toko Tujuan <span class="text-danger">*</span></label>
+                  <select class="form-select" v-model="transferForm.ke" required>
+                    <option value="" disabled>-- Pilih toko tujuan --</option>
+                    <option v-for="t in daftarToko.filter(t => t.kode !== toko.kode)" :key="t.kode" :value="t.kode">{{ t.nama }} (stok sekarang: {{ transferForm.stok[t.kode] }})</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Jumlah Dipindahkan <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control form-control-lg fw-bold" v-model.number="transferForm.qty" min="1" :max="transferForm.stok[toko.kode]" step="1" required>
+                  <div class="form-text">Sisa di {{ toko.nama }} setelah transfer: <strong>{{ transferForm.stok[toko.kode] - (Number(transferForm.qty) || 0) }}</strong> unit</div>
+                </div>
+
+                <div class="mb-2">
+                  <label class="form-label small fw-bold">Keterangan</label>
+                  <input type="text" class="form-control" v-model="transferForm.keterangan" placeholder="Contoh: Stok cabang menipis / dibawa Pak Made">
+                </div>
+              </div>
+              <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary" @click="showTransferModal = false">Batal</button>
+                <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingTransfer">
+                  <span v-if="isSavingTransfer" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  {{ isSavingTransfer ? 'Memindahkan...' : 'Pindahkan Stok' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL FAKTUR PEMBELIAN (KULAKAN MASSAL) -->
+      <div v-if="showPurchaseModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white py-3">
+              <h5 class="modal-title fw-bold">
+                <i class="fas fa-file-invoice-dollar text-success me-2"></i> Input Faktur Pembelian (Kulakan) &mdash; {{ toko.nama }}
+              </h5>
+              <button type="button" class="btn-close btn-close-white" @click="closePurchaseModal"></button>
+            </div>
+            <form @submit.prevent="submitPurchaseInvoice">
+              <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+                
+                <!-- Info Header Faktur -->
+                <div class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">No. Faktur / Nota Supplier</label>
+                    <input type="text" class="form-control" v-model="purchaseForm.no_faktur" placeholder="Contoh: INV-2026/09/88">
+                  </div>
+                  <div class="col-md-5">
+                    <label class="form-label small fw-bold">Nama Supplier / Agen <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" list="supplierList" v-model="purchaseForm.supplier" placeholder="Ketik nama supplier" required autofocus>
+                    <datalist id="supplierList">
+                      <option value="Agen Sembako Makmur">
+                      <option value="Distributor Rokok Subur">
+                      <option value="Grosir Minuman Segar">
+                      <option value="PT Wings Surya">
+                      <option value="Indomarco Adi Prima">
+                    </datalist>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-bold">Status Bayar</label>
+                    <select class="form-select" v-model="purchaseForm.status_bayar">
+                      <option value="LUNAS">Lunas (Tunai/Transfer)</option>
+                      <option value="TEMPO">Tempo (Hutang)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Input Pilih Produk ke Faktur -->
+                <div class="card bg-light border-0 p-3 mb-3">
+                  <label class="form-label small fw-bold text-primary mb-1"><i class="fas fa-plus-circle me-1"></i> Tambah Barang yang Dibeli ke Nota</label>
+                  <div class="input-group">
+                    <select class="form-select" v-model="purchaseForm.selectedProductId">
+                      <option value="" disabled>-- Pilih barang dari database --</option>
+                      <option v-for="p in products" :key="p.ID_Produk" :value="p.ID_Produk">
+                        {{ p.Nama_Produk }} (Stok {{ toko.nama }}: {{ p.Stok_Tersedia }})
+                      </option>
+                    </select>
+                    <button type="button" class="btn btn-primary fw-bold" :disabled="!purchaseForm.selectedProductId" @click="addPurchaseItem">
+                      <i class="fas fa-plus"></i> Masukkan ke Faktur
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tabel Item Faktur -->
+                <div class="table-responsive border rounded mb-3">
+                  <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-secondary">
+                      <tr>
+                        <th class="ps-2">Nama Barang</th>
+                        <th style="width: 130px;">H. Beli Baru (Rp)</th>
+                        <th style="width: 100px;">Qty Masuk</th>
+                        <th class="text-end" style="width: 130px;">Subtotal</th>
+                        <th class="text-center" style="width: 50px;">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(item, idx) in purchaseForm.items" :key="item.id_produk">
+                        <td class="ps-2 fw-bold text-truncate" style="max-width: 200px;">
+                          {{ item.nama_produk }}
+                          <div class="text-muted small" style="font-size: 0.7rem;">ID: {{ item.id_produk }}</div>
+                        </td>
+                        <td>
+                          <input type="number" class="form-control form-control-sm text-end" v-model.number="item.harga_beli" @change="calculatePurchaseItem(item)" min="0">
+                        </td>
+                        <td>
+                          <input type="number" class="form-control form-control-sm text-center fw-bold text-success" v-model.number="item.qty" @change="calculatePurchaseItem(item)" min="1">
+                        </td>
+                        <td class="text-end fw-bold">Rp {{ formatNumber(item.subtotal) }}</td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" @click="removePurchaseItem(idx)" title="Hapus dari Faktur">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="purchaseForm.items.length === 0">
+                        <td colspan="5" class="text-center py-4 text-muted">
+                          Belum ada barang dimasukkan. Pilih barang di atas untuk menambahkan ke nota faktur.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="row align-items-center">
+                  <div class="col-md-7">
+                    <input type="text" class="form-control form-control-sm" v-model="purchaseForm.catatan" placeholder="Catatan tambahan (opsional, misal: Jatuh tempo 7 hari)">
+                  </div>
+                  <div class="col-md-5 text-end">
+                    <span class="text-muted me-2">Total Tagihan:</span>
+                    <span class="fs-4 fw-bold text-danger">Rp {{ formatNumber(totalPembelian) }}</span>
+                  </div>
+                </div>
+
+              </div>
+              <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary" @click="closePurchaseModal">Batal</button>
+                <button type="submit" class="btn btn-success fw-bold px-4" :disabled="isSavingPurchase || purchaseForm.items.length === 0">
+                  <span v-if="isSavingPurchase" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  {{ isSavingPurchase ? 'Memproses...' : 'Simpan & Update Stok' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL STRUK BELANJA (THERMAL RECEIPT PREVIEW & PRINT) -->
+      <div v-if="showReceiptModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.6); z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white py-2 no-print">
+              <h6 class="modal-title fw-bold"><i class="fas fa-receipt me-2 text-success"></i> Struk Transaksi Kasir</h6>
+              <button type="button" class="btn-close btn-close-white" @click="closeReceiptModal"></button>
+            </div>
+            <div class="modal-body p-3 bg-light">
+              <!-- Thermal Receipt Box -->
+              <div class="receipt-box receipt-print-area mx-auto">
+                <div class="text-center mb-2">
+                  <h5 class="fw-bold mb-0" style="font-size: 16px; letter-spacing: 1px;">TOKO SUKAHATI</h5>
+                  <div style="font-size: 11px;" class="text-muted">{{ lastTransaction?.nama_toko }}</div>
+                  <div style="font-size: 10px;" class="text-muted">Pusat Belanja Hemat & Lengkap</div>
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div style="font-size: 11px;">
+                  <div class="d-flex justify-content-between">
+                    <span>No. Struk:</span>
+                    <span class="fw-bold">{{ lastTransaction?.idTransaksi }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Waktu:</span>
+                    <span>{{ formatDate(lastTransaction?.waktu) }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Kasir:</span>
+                    <span>{{ lastTransaction?.kasir }}</span>
+                  </div>
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <!-- Items Table -->
+                <table class="w-100 receipt-table" style="font-size: 11px;">
+                  <tbody>
+                    <tr v-for="(it, idx) in (lastTransaction?.cart || [])" :key="idx">
+                      <td colspan="2">
+                        <div class="fw-bold text-truncate" style="max-width: 280px;">{{ it.nama }}</div>
+                        <div class="d-flex justify-content-between text-muted">
+                          <span>{{ it.qty }} x {{ formatNumber(it.harga_jual) }}</span>
+                          <span class="text-dark fw-bold">Rp {{ formatNumber(it.subtotal) }}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+                <div class="receipt-divider"></div>
+                
+                <div style="font-size: 12px;">
+                  <div class="d-flex justify-content-between fw-bold">
+                    <span>TOTAL:</span>
+                    <span>Rp {{ formatNumber(lastTransaction?.total_belanja) }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between" style="font-size: 11px;">
+                    <span>Metode:</span>
+                    <span>{{ lastTransaction?.metode_pembayaran }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between" style="font-size: 11px;" v-if="lastTransaction?.metode_pembayaran === 'Tunai'">
+                    <span>Bayar Tunai:</span>
+                    <span>Rp {{ formatNumber(lastTransaction?.jumlah_bayar) }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between fw-bold text-success" style="font-size: 11px;" v-if="lastTransaction?.metode_pembayaran === 'Tunai'">
+                    <span>Kembalian:</span>
+                    <span>Rp {{ formatNumber(lastTransaction?.kembalian) }}</span>
+                  </div>
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div class="text-center mt-2" style="font-size: 10px; color: #555;">
+                  <div>=== TERIMA KASIH ===</div>
+                  <div>Barang yang sudah dibeli tidak dapat ditukar</div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer bg-white py-2 no-print d-flex justify-content-between">
+              <button type="button" class="btn btn-outline-secondary btn-sm" @click="closeReceiptModal">
+                <i class="fas fa-arrow-left me-1"></i> Transaksi Baru
+              </button>
+              <button type="button" class="btn btn-primary btn-sm fw-bold px-3" @click="printReceipt">
+                <i class="fas fa-print me-1"></i> Cetak Struk
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+  const { createApp } = Vue;
+
+  // Panggil fungsi server (Code.js) sebagai Promise. Error dari server masuk ke catch.
+  // Di dalam Apps Script lewat google.script.run; di GitHub Pages lewat API doPost (window.API_URL).
+  async function server(fn, ...args) {
+    const data = JSON.parse(JSON.stringify(args));
+    if (window.google && google.script) {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          [fn](...data);
+      });
+    }
+
+    let jawaban;
+    try {
+      // Tanpa header tambahan: body teks biasa tidak memicu preflight CORS
+      const res = await fetch(window.API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, args: data }) });
+      jawaban = await res.json();
+    } catch (err) {
+      throw new Error('Tidak bisa menghubungi server. Periksa koneksi internet lalu coba lagi.');
+    }
+    if (!jawaban.ok) throw new Error(jawaban.error);
+    return jawaban.result;
+  }
+
+  createApp({
+    data() {
+      return {
+        // Auth State
+        isLoggedIn: false,
+        isLoggingIn: false,
+        userRole: '', // 'kasir' atau 'admin'
+        token: '', // token sesi dari login; dikirim ke server di setiap panggilan (PIN tidak disimpan)
+        namaPengguna: '',
+
+        // Pengguna (khusus Admin)
+        users: [],
+        showUserModal: false,
+        isSavingUser: false,
+        userForm: { id: '', nama: '', toko: '', pin: '', aktif: true },
+        pinInput: '',
+        toko: { kode: '', nama: '' }, // toko yang sedang dikerjakan (akun toko: tetap; Admin: bisa ganti)
+        daftarToko: [],
+
+        // App State
+        activeTab: 'kasir',
+        laporanSubTab: 'ringkasan', // 'ringkasan', 'transaksi', 'pembelian', 'mutasi', atau 'shift'
+        products: [],
+        transactions: [],
+        stockLogs: [],
+        shifts: [],
+        kasList: [],
+        ringkasan: null,
+        // Shift kasir toko yang sedang dikerjakan: null = kasir belum dibuka
+        shift: null,
+        shiftDimuat: false,
+        purchases: [],
+        loading: false,
+        loadingLaporan: false,
+        laporanFilter: { cabang: '', dari: '', sampai: '', tipe: '', cari: '' }, // cabang '' = semua toko; tipe & cari hanya untuk tab Audit Mutasi
+        // Rincian barang dari baris laporan yang sedang dibuka
+        detailId: '',
+        detailItems: [],
+        loadingDetail: false,
+        searchQuery: '',
+        inventorySearchQuery: '',
+        inventoryCategoryFilter: '',
+        inventoryLowOnly: false, // hanya barang yang stoknya di toko terpilih sudah menyentuh stok minimum
+        mobileNavOpen: false,
+
+        // Cart State
+        cart: [],
+        metodePembayaran: 'Tunai',
+        jumlahBayar: 0,
+        isProcessing: false,
+
+        // Struk Belanja / Receipt State
+        showReceiptModal: false,
+        lastTransaction: null,
+
+        // Product Modal State
+        showProductModal: false,
+        isSavingProduct: false,
+        productForm: {
+          ID_Produk: '',
+          Nama_Produk: '',
+          Kategori: 'SEMBAKO',
+          Harga_Beli: 0,
+          Harga_Jual: 0,
+          Stok_Tersedia: 0,
+          Stok_Minimum: 5,
+          isEdit: false
+        },
+
+        // Restock Modal State
+        showRestockModal: false,
+        isSavingRestock: false,
+        restockForm: {
+          id_produk: '',
+          nama_produk: '',
+          stok_sekarang: 0,
+          qty: 12,
+          keterangan: 'Kulakan / Barang Masuk'
+        },
+
+        // Transfer Stok Modal State (dari toko yang sedang dipilih ke toko lain)
+        showTransferModal: false,
+        isSavingTransfer: false,
+        transferForm: {
+          id_produk: '',
+          nama_produk: '',
+          stok: {},
+          ke: '',
+          qty: 1,
+          keterangan: ''
+        },
+
+        // Purchase Invoice Modal State
+        showPurchaseModal: false,
+        isSavingPurchase: false,
+        purchaseForm: {
+          no_faktur: '',
+          supplier: '',
+          status_bayar: 'LUNAS',
+          catatan: '',
+          selectedProductId: '',
+          items: []
+        }
+      }
+    },
+    computed: {
+      filteredProducts() {
+        return this.cariProduk(this.products, this.searchQuery);
+      },
+      filteredInventoryProducts() {
+        let list = this.products;
+        if (this.inventoryCategoryFilter) {
+          list = list.filter(p => p.Kategori === this.inventoryCategoryFilter);
+        }
+        if (this.inventoryLowOnly) list = list.filter(this.menipis);
+        return this.cariProduk(list, this.inventorySearchQuery);
+      },
+      categoriesList() {
+        return [...new Set(this.products.map(p => p.Kategori).filter(Boolean))].sort();
+      },
+      totalBelanja() {
+        return this.cart.reduce((total, item) => total + item.subtotal, 0);
+      },
+      totalPembelian() {
+        return this.purchaseForm.items.reduce((total, item) => total + (Number(item.subtotal) || 0), 0);
+      },
+      kembalian() {
+        return this.jumlahBayar - this.totalBelanja;
+      },
+      // Jumlah baris (dan total rupiah) laporan yang sedang tampil
+      ringkasanLaporan() {
+        const tab = this.laporanSubTab;
+        if (tab === 'ringkasan') return '';
+        const rows = { transaksi: this.transactions, pembelian: this.purchases, mutasi: this.stockLogs, shift: this.shifts, kas: this.kasList }[tab];
+        const rupiah = n => 'Rp ' + this.formatNumber(n);
+        const jumlah = (list, kolom) => list.reduce((sum, r) => sum + (Number(r[kolom]) || 0), 0);
+        let teks = rows.length + ' baris';
+        if (tab === 'transaksi') {
+          // Transaksi batal tidak dihitung; laba hanya dari transaksi yang menyimpan harga modal
+          const aktif = rows.filter(r => r.Status !== 'BATAL');
+          const bermodal = aktif.filter(r => this.laba(r) !== null);
+          teks += ' • Total ' + rupiah(jumlah(aktif, 'Total_Belanja'));
+          teks += ' • Laba kotor ' + rupiah(jumlah(bermodal, 'Total_Belanja') - jumlah(bermodal, 'Total_Modal'));
+          if (bermodal.length < aktif.length) teks += ` (${aktif.length - bermodal.length} transaksi lama tanpa data modal tidak dihitung)`;
+          if (aktif.length < rows.length) teks += ` • ${rows.length - aktif.length} dibatalkan`;
+        } else if (tab === 'pembelian') {
+          teks += ' • Total ' + rupiah(jumlah(rows, 'Total_Tagihan'));
+        } else if (tab === 'kas') {
+          teks += ' • Masuk ' + rupiah(jumlah(rows.filter(r => r.Jenis === 'MASUK'), 'Jumlah'));
+          teks += ' • Keluar ' + rupiah(jumlah(rows.filter(r => r.Jenis !== 'MASUK'), 'Jumlah'));
+        } else if (tab === 'shift') {
+          teks += ' • Total selisih ' + rupiah(jumlah(rows, 'Selisih'));
+        }
+        // 200 = BATAS_LAPORAN di Code.js
+        if (rows.length >= 200) teks += ' (dibatasi 200 baris terbaru — persempit rentang tanggal)';
+        return teks;
+      },
+      // -- RINGKASAN --
+      // Toko yang masuk hitungan laporan (mengikuti filter toko)
+      tokoLaporan() {
+        return this.daftarToko.filter(t => !this.laporanFilter.cabang || t.kode === this.laporanFilter.cabang);
+      },
+      // Stok saat ini x harga beli; tidak mengikuti filter tanggal
+      nilaiPersediaan() {
+        return this.products.reduce((sum, p) =>
+          sum + this.tokoLaporan.reduce((s, t) => s + (p.Stok ? p.Stok[t.kode] : 0) * p.Harga_Beli, 0), 0);
+      },
+      // Barang yang stoknya sudah menyentuh stok minimum, per toko
+      stokMenipis() {
+        const list = [];
+        this.products.forEach(p => this.tokoLaporan.forEach(t => {
+          const stok = p.Stok ? p.Stok[t.kode] : 0;
+          if (p.Stok_Minimum > 0 && stok <= p.Stok_Minimum) {
+            list.push({ kode: t.kode, id: p.ID_Produk, nama: p.Nama_Produk, kategori: p.Kategori, stok: stok, minimum: p.Stok_Minimum });
+          }
+        }));
+        return list.sort((a, b) => a.stok - b.stok || a.nama.localeCompare(b.nama));
+      },
+      kartuRingkasan() {
+        const r = this.ringkasan;
+        const rp = n => 'Rp ' + this.formatNumber(n);
+        return [
+          { label: 'Omzet', nilai: rp(r.omzet), catatan: r.transaksi + ' transaksi' },
+          { label: 'Laba kotor', nilai: rp(r.laba), catatan: r.tanpaModal ? r.tanpaModal + ' transaksi lama tanpa data modal tidak dihitung' : 'Omzet dikurangi harga modal barang' },
+          { label: 'Rata-rata per transaksi', nilai: rp(r.transaksi ? r.omzet / r.transaksi : 0), catatan: 'Omzet dibagi jumlah transaksi' },
+          { label: 'Nilai persediaan', nilai: rp(this.nilaiPersediaan), catatan: 'Stok saat ini × harga beli' }
+        ];
+      },
+      canCheckout() {
+        if (!this.shift || this.cart.length === 0) return false;
+        if (this.metodePembayaran === 'Tunai' && this.kembalian < 0) return false;
+        return true;
+      }
+    },
+    methods: {
+      formatNumber(num) {
+        const val = Math.round(Number(num) || 0);
+        return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      },
+      formatDate(dateString) {
+        if (!dateString) return '-';
+        let d;
+        if (typeof dateString === 'string') {
+          // Kompatibilitas browser Safari / iOS (replace spasi dengan T)
+          d = new Date(dateString.replace(' ', 'T'));
+        } else {
+          d = new Date(dateString);
+        }
+        if (isNaN(d.getTime())) return String(dateString);
+        return d.toLocaleDateString('id-ID') + ' ' + d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+      },
+      // Sheets menyimpan "+5" sebagai angka 5, jadi tanda plus dipasang lagi di sini
+      formatQty(qty) {
+        const n = Number(qty);
+        return n > 0 ? '+' + n : String(qty);
+      },
+      // Laba kotor satu transaksi; null bila transaksi lama belum menyimpan harga modal
+      laba(trx) {
+        return trx.Total_Modal === '' || trx.Total_Modal == null ? null : Number(trx.Total_Belanja) - Number(trx.Total_Modal);
+      },
+      // Stok barang di toko yang sedang dikelola sudah menyentuh stok minimum?
+      menipis(p) {
+        return p.Stok_Minimum > 0 && p.Stok_Tersedia <= p.Stok_Minimum;
+      },
+      formatTanggal(tgl) {
+        const d = new Date(tgl + 'T00:00:00');
+        return isNaN(d.getTime()) ? tgl : d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      },
+      cariProduk(list, keyword) {
+        const query = keyword.toLowerCase().trim();
+        if (!query) return list;
+        return list.filter(p =>
+          p.Nama_Produk.toLowerCase().includes(query) ||
+          p.ID_Produk.toLowerCase().includes(query) ||
+          p.Kategori.toLowerCase().includes(query)
+        );
+      },
+      async api(fn, ...args) {
+        try {
+          return await server(fn, this.token, ...args);
+        } catch (err) {
+          // Sesi habis / pengguna dinonaktifkan: kembali ke halaman login
+          if (/Sesi berakhir/.test(String(err && err.message))) this.logout();
+          throw err;
+        }
+      },
+      gagal(err, judul) {
+        Swal.fire(judul || 'Gagal', String((err && err.message) || err).replace(/^Error:\s*/, ''), 'error');
+      },
+      sukses(judul, pesan) {
+        Swal.fire({ title: judul, text: pesan, icon: 'success', timer: 1500, showConfirmButton: false });
+      },
+
+      // -- AUTH --
+      async login() {
+        if (!this.pinInput || this.isLoggingIn) return;
+        this.isLoggingIn = true;
+        try {
+          const sesi = await server('login', this.pinInput);
+          this.userRole = sesi.role;
+          this.toko = sesi.toko;
+          this.daftarToko = sesi.daftarToko;
+          this.token = sesi.token;
+          this.namaPengguna = sesi.nama;
+          this.isLoggedIn = true;
+          this.loadProducts();
+          this.loadShift();
+        } catch (err) {
+          this.gagal(err, 'Akses Ditolak');
+        } finally {
+          this.isLoggingIn = false;
+          this.pinInput = '';
+        }
+      },
+      logout() {
+        this.isLoggedIn = false;
+        if (this.token) server('logout', this.token).catch(() => {});
+        this.userRole = '';
+        this.token = '';
+        this.products = [];
+        this.cart = [];
+        this.jumlahBayar = 0;
+        this.shift = null;
+        this.shiftDimuat = false;
+        this.activeTab = 'kasir';
+      },
+
+      // -- DATA FETCHING --
+      async loadProducts() {
+        this.loading = true;
+        try {
+          this.products = await this.api('getProducts', this.toko.kode);
+          // Selaraskan keranjang dengan harga & stok terbaru
+          this.cart = this.cart.flatMap(item => {
+            const p = this.products.find(p => p.ID_Produk === item.id_produk);
+            if (!p || p.Stok_Tersedia <= 0 || p.Harga_Jual <= 0) return [];
+            const qty = Math.min(item.qty, p.Stok_Tersedia);
+            return [{ ...item, nama: p.Nama_Produk, harga_jual: p.Harga_Jual, qty, subtotal: qty * p.Harga_Jual }];
+          });
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat produk');
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      // Admin pindah toko: stok & keranjang mengikuti toko yang dipilih
+      gantiToko(kode) {
+        this.toko = this.daftarToko.find(t => t.kode === kode) || this.toko;
+        this.cart = [];
+        this.jumlahBayar = 0;
+        this.loadProducts();
+        this.loadShift();
+      },
+      namaToko(kode) {
+        const t = this.daftarToko.find(t => t.kode === kode);
+        return t ? t.nama : kode;
+      },
+
+      openLaporan() {
+        this.activeTab = 'laporan';
+        this.loadLaporan('ringkasan');
+      },
+
+      async loadLaporan(tab) {
+        const [fn, target] = {
+          transaksi: ['getTransactions', 'transactions'],
+          pembelian: ['getPurchases', 'purchases'],
+          mutasi: ['getStockLogs', 'stockLogs'],
+          shift: ['getShifts', 'shifts'],
+          kas: ['getKas', 'kasList'],
+          ringkasan: ['getRingkasan', 'ringkasan']
+        }[tab];
+        this.laporanSubTab = tab;
+        this.detailId = '';
+        if (tab === 'ringkasan') this.loadProducts(); // nilai persediaan & stok menipis dari data terbaru
+        this.loadingLaporan = true;
+        try {
+          this[target] = await this.api(fn, this.laporanFilter);
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat laporan');
+        } finally {
+          this.loadingLaporan = false;
+        }
+      },
+
+      filterHariIni() {
+        const d = new Date();
+        const hariIni = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        this.laporanFilter.dari = this.laporanFilter.sampai = hariIni;
+        this.loadLaporan(this.laporanSubTab);
+      },
+      resetFilterLaporan() {
+        this.laporanFilter = { cabang: '', dari: '', sampai: '', tipe: '', cari: '' };
+        this.loadLaporan(this.laporanSubTab);
+      },
+
+      async batalkanTransaksi(trx) {
+        const { value: alasan, isConfirmed } = await Swal.fire({
+          title: 'Batalkan Transaksi?',
+          text: `${trx.ID_Transaksi} • Rp ${this.formatNumber(trx.Total_Belanja)}. Stok barangnya dikembalikan ke ${this.namaToko(trx.Cabang)}.`,
+          icon: 'warning',
+          input: 'text',
+          inputPlaceholder: 'Alasan pembatalan (wajib)',
+          inputValidator: v => v.trim() ? undefined : 'Alasan wajib diisi',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Ya, Batalkan',
+          cancelButtonText: 'Tidak'
+        });
+        if (!isConfirmed) return;
+
+        try {
+          const res = await this.api('voidTransaction', trx.ID_Transaksi, alasan);
+          if (res.peringatan) Swal.fire('Dibatalkan', res.message, 'warning');
+          else this.sukses('Dibatalkan', res.message);
+          this.loadLaporan('transaksi');
+          this.loadProducts();
+        } catch (err) {
+          this.gagal(err);
+        }
+      },
+
+      // Klik baris laporan: buka/tutup rincian barangnya
+      async toggleDetail(jenis, id) {
+        if (this.detailId === id) {
+          this.detailId = '';
+          return;
+        }
+        this.detailId = id;
+        this.detailItems = [];
+        this.loadingDetail = true;
+        try {
+          const items = await this.api('getDetail', jenis, id);
+          if (this.detailId === id) this.detailItems = items;
+        } catch (err) {
+          this.detailId = '';
+          this.gagal(err, 'Gagal memuat rincian');
+        } finally {
+          this.loadingDetail = false;
+        }
+      },
+
+      // -- PENGGUNA (akun per orang, khusus Admin) --
+      openPengguna() {
+        this.activeTab = 'pengguna';
+        this.loadUsers();
+      },
+      async loadUsers() {
+        try {
+          this.users = await this.api('getUsers');
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat pengguna');
+        }
+      },
+      openUserModal(user) {
+        this.userForm = user
+          ? { id: user.id, nama: user.nama, toko: user.toko, pin: '', aktif: user.aktif }
+          : { id: '', nama: '', toko: this.toko.kode, pin: '', aktif: true };
+        this.showUserModal = true;
+      },
+      async saveUserSubmit() {
+        this.isSavingUser = true;
+        try {
+          const res = await this.api('saveUser', this.userForm);
+          this.sukses('Tersimpan', res.message);
+          this.showUserModal = false;
+          this.loadUsers();
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSavingUser = false;
+        }
+      },
+
+      // -- SHIFT / TUTUP KASIR --
+      async loadShift() {
+        this.shiftDimuat = false;
+        try {
+          this.shift = await this.api('getShift', this.toko.kode);
+          this.shiftDimuat = true;
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat status kasir');
+        }
+      },
+      async bukaKasir() {
+        const { value, isConfirmed } = await Swal.fire({
+          title: 'Buka Kasir ' + this.toko.nama,
+          input: 'number',
+          inputLabel: 'Modal awal: uang di laci saat ini (Rp)',
+          inputValue: 0,
+          inputAttributes: { min: 0, step: 1 },
+          inputValidator: v => v === '' || Number(v) < 0 ? 'Isi modal awal (boleh 0)' : undefined,
+          showCancelButton: true,
+          confirmButtonText: 'Buka Kasir',
+          cancelButtonText: 'Batal'
+        });
+        if (!isConfirmed) return;
+
+        try {
+          this.shift = await this.api('openShift', { cabang: this.toko.kode, modal_awal: Number(value) });
+          this.sukses('Kasir Dibuka', 'Modal awal Rp ' + this.formatNumber(this.shift.modalAwal));
+        } catch (err) {
+          this.gagal(err);
+          this.loadShift();
+        }
+      },
+      // Uang masuk/keluar laci di luar penjualan (setor ke pemilik, beli keperluan toko, tambahan kembalian)
+      async catatKas() {
+        const form = await Swal.fire({
+          title: 'Kas Masuk / Keluar',
+          html: `<p class="small text-muted mb-3">Uang yang masuk ke atau keluar dari laci di luar penjualan. Ikut dihitung saat tutup kasir.</p>
+                 <label class="form-label small fw-bold" for="kasJenis">Jenis</label>
+                 <select id="kasJenis" class="form-select mb-3">
+                   <option value="KELUAR">Kas keluar (setor ke pemilik, beli keperluan toko)</option>
+                   <option value="MASUK">Kas masuk (tambahan uang kembalian, dll.)</option>
+                 </select>
+                 <label class="form-label small fw-bold" for="kasJumlah">Jumlah (Rp)</label>
+                 <input id="kasJumlah" type="number" min="1" step="1" class="form-control form-control-lg text-center mb-3">
+                 <label class="form-label small fw-bold" for="kasKet">Keterangan</label>
+                 <input id="kasKet" type="text" class="form-control" placeholder="Wajib diisi, mis. setor ke Pak Made">`,
+          focusConfirm: false,
+          didOpen: () => document.getElementById('kasJumlah').focus(),
+          preConfirm: () => {
+            const jumlah = Number(document.getElementById('kasJumlah').value);
+            const keterangan = document.getElementById('kasKet').value.trim();
+            if (!Number.isInteger(jumlah) || jumlah < 1) {
+              Swal.showValidationMessage('Isi jumlah uang (angka bulat lebih dari 0)');
+              return false;
+            }
+            if (!keterangan) {
+              Swal.showValidationMessage('Isi keterangan: uang untuk apa atau dari siapa');
+              return false;
+            }
+            return { jenis: document.getElementById('kasJenis').value, jumlah, keterangan };
+          },
+          showCancelButton: true,
+          confirmButtonText: 'Simpan',
+          cancelButtonText: 'Batal'
+        });
+        if (!form.isConfirmed) return;
+
+        try {
+          await this.api('addKas', { cabang: this.toko.kode, ...form.value });
+          this.sukses('Tercatat', (form.value.jenis === 'MASUK' ? 'Kas masuk' : 'Kas keluar') + ' Rp ' + this.formatNumber(form.value.jumlah));
+        } catch (err) {
+          this.gagal(err);
+          this.loadShift();
+        }
+      },
+      // Uang seharusnya baru ditampilkan setelah kasir memasukkan hasil hitung fisiknya
+      async tutupKasir() {
+        const form = await Swal.fire({
+          title: 'Tutup Kasir ' + this.toko.nama,
+          html: `<p class="small text-muted mb-3">Dibuka ${this.formatDate(this.shift.waktuBuka)} &bull; Modal awal Rp ${this.formatNumber(this.shift.modalAwal)}</p>
+                 <label class="form-label small fw-bold" for="kasFisik">Uang fisik di laci sekarang (Rp)</label>
+                 <input id="kasFisik" type="number" min="0" step="1" class="form-control form-control-lg text-center mb-3">
+                 <input id="catatanShift" type="text" class="form-control" placeholder="Catatan (opsional)">`,
+          focusConfirm: false,
+          didOpen: () => document.getElementById('kasFisik').focus(),
+          preConfirm: () => {
+            const kas = document.getElementById('kasFisik').value;
+            if (kas === '' || Number(kas) < 0) {
+              Swal.showValidationMessage('Hitung dan isi jumlah uang di laci');
+              return false;
+            }
+            return { kas_fisik: Number(kas), catatan: document.getElementById('catatanShift').value };
+          },
+          showCancelButton: true,
+          confirmButtonText: 'Tutup Kasir',
+          cancelButtonText: 'Batal'
+        });
+        if (!form.isConfirmed) return;
+
+        try {
+          const r = await this.api('closeShift', { cabang: this.toko.kode, ...form.value });
+          this.shift = null;
+          const rp = n => 'Rp ' + this.formatNumber(n);
+          const baris = (label, nilai, kelas) => `<tr class="${kelas || ''}"><td class="text-start">${label}</td><td class="text-end">${nilai}</td></tr>`;
+          Swal.fire({
+            title: 'Kasir Ditutup',
+            icon: r.selisih === 0 ? 'success' : 'warning',
+            html: `<table class="table table-sm mb-0">${
+              baris('Jumlah transaksi', r.jumlahTransaksi) +
+              baris('Modal awal', rp(r.modalAwal)) +
+              baris('Penjualan tunai', rp(r.penjualanTunai)) +
+              baris('Penjualan non-tunai', rp(r.penjualanNonTunai)) +
+              baris('Kas masuk', rp(r.kasMasuk)) +
+              baris('Kas keluar', rp(r.kasKeluar)) +
+              baris('Uang seharusnya di laci', rp(r.kasSeharusnya), 'fw-bold') +
+              baris('Uang fisik dihitung', rp(r.kasFisik), 'fw-bold') +
+              baris('Selisih', r.selisih === 0 ? 'Pas' : (r.selisih > 0 ? 'Lebih ' : 'Kurang ') + rp(Math.abs(r.selisih)), r.selisih === 0 ? 'fw-bold text-success' : 'fw-bold text-danger')
+            }</table>`
+          });
+        } catch (err) {
+          this.gagal(err);
+          this.loadShift();
+        }
+      },
+
+      // -- CART LOGIC --
+      addToCart(product) {
+        if (product.Harga_Jual <= 0) {
+          Swal.fire('Oopss', 'Harga jual barang ini belum diisi!', 'warning');
+          return;
+        }
+        if (product.Stok_Tersedia <= 0) {
+          Swal.fire('Oopss', 'Stok barang ini habis!', 'warning');
+          return;
+        }
+
+        const existingItem = this.cart.find(item => item.id_produk === product.ID_Produk);
+        if (existingItem) {
+          existingItem.qty++;
+          this.validateCartQty(existingItem);
+        } else {
+          this.cart.unshift({
+            id_produk: product.ID_Produk,
+            nama: product.Nama_Produk,
+            harga_jual: product.Harga_Jual,
+            qty: 1,
+            subtotal: product.Harga_Jual
+          });
+        }
+      },
+      // Enter di kotak cari (atau scan barcode): langsung masuk keranjang bila kode cocok / hasil tinggal satu
+      addFromSearch() {
+        const query = this.searchQuery.toLowerCase().trim();
+        const list = this.filteredProducts;
+        const product = list.find(p => p.ID_Produk.toLowerCase() === query) || (list.length === 1 ? list[0] : null);
+        if (!query || !product) return;
+        this.addToCart(product);
+        this.searchQuery = '';
+      },
+      removeFromCart(index) {
+        this.cart.splice(index, 1);
+      },
+      updateQty(index, change) {
+        const item = this.cart[index];
+        if (item.qty + change < 1) {
+          this.removeFromCart(index);
+          return;
+        }
+        item.qty += change;
+        this.validateCartQty(item);
+      },
+      validateCartQty(item) {
+        const product = this.products.find(p => p.ID_Produk === item.id_produk);
+        const maxStock = product ? product.Stok_Tersedia : item.qty;
+        let qtyVal = parseInt(item.qty, 10);
+
+        if (isNaN(qtyVal) || qtyVal < 1) {
+          qtyVal = 1;
+        }
+        if (qtyVal > maxStock) {
+          qtyVal = maxStock;
+          Swal.fire('Stok Terbatas', `Maksimal stok tersedia adalah ${maxStock}`, 'warning');
+        }
+        item.qty = qtyVal;
+        item.subtotal = qtyVal * item.harga_jual;
+      },
+      setQuickCash(amount) {
+        if (amount === 'pas') {
+          this.jumlahBayar = this.totalBelanja;
+        } else {
+          this.jumlahBayar = Number(amount);
+        }
+      },
+
+      // -- CHECKOUT & STRUK --
+      async checkout() {
+        this.isProcessing = true;
+        const bayarAmount = this.metodePembayaran === 'Tunai' ? Number(this.jumlahBayar) || 0 : this.totalBelanja;
+
+        const transactionData = {
+          kasir: this.namaPengguna,
+          cabang: this.toko.kode,
+          nama_toko: this.toko.nama,
+          cart: this.cart,
+          total_belanja: this.totalBelanja,
+          jumlah_bayar: bayarAmount,
+          kembalian: bayarAmount - this.totalBelanja,
+          metode_pembayaran: this.metodePembayaran,
+          waktu: new Date()
+        };
+
+        try {
+          const res = await this.api('processTransaction', transactionData);
+          this.lastTransaction = { ...transactionData, idTransaksi: res.idTransaksi };
+          this.showReceiptModal = true;
+          this.cart = [];
+          this.jumlahBayar = 0;
+        } catch (err) {
+          this.gagal(err, 'Transaksi Gagal');
+          this.loadShift(); // kasir bisa saja sudah ditutup dari perangkat lain
+        } finally {
+          this.isProcessing = false;
+          this.loadProducts(); // Refresh stok & harga (juga saat gagal, agar keranjang ikut diperbarui)
+        }
+      },
+      closeReceiptModal() {
+        this.showReceiptModal = false;
+      },
+      printReceipt() {
+        window.print();
+      },
+      printReport() {
+        window.print();
+      },
+
+      // -- PRODUCT CRUD --
+      openAddProduct() {
+        this.productForm = {
+          ID_Produk: '',
+          Nama_Produk: '',
+          Kategori: 'SEMBAKO',
+          Harga_Beli: 0,
+          Harga_Jual: 0,
+          Stok_Tersedia: 10,
+          Stok_Minimum: 5,
+          isEdit: false
+        };
+        this.showProductModal = true;
+      },
+      openEditProduct(product) {
+        this.productForm = {
+          ID_Produk: product.ID_Produk,
+          Nama_Produk: product.Nama_Produk,
+          Kategori: product.Kategori || 'UMUM',
+          Harga_Beli: Number(product.Harga_Beli) || 0,
+          Harga_Jual: Number(product.Harga_Jual) || 0,
+          Stok_Tersedia: Number(product.Stok_Tersedia) || 0,
+          Stok_Minimum: product.Stok_Minimum,
+          isEdit: true
+        };
+        this.showProductModal = true;
+      },
+      closeProductModal() {
+        this.showProductModal = false;
+      },
+      async saveProductSubmit() {
+        if (!this.productForm.Nama_Produk) {
+          Swal.fire('Peringatan', 'Nama barang wajib diisi!', 'warning');
+          return;
+        }
+        if (this.productForm.Harga_Jual <= 0) {
+          Swal.fire('Peringatan', 'Harga jual harus lebih dari 0!', 'warning');
+          return;
+        }
+
+        this.isSavingProduct = true;
+        try {
+          const res = await this.api('saveProduct', { ...this.productForm, cabang: this.toko.kode });
+          this.sukses('Berhasil!', res.message);
+          this.showProductModal = false;
+          this.loadProducts();
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSavingProduct = false;
+        }
+      },
+      async confirmDeleteProduct(product) {
+        const result = await Swal.fire({
+          title: 'Hapus Produk?',
+          text: `Yakin ingin menghapus ${product.Nama_Produk}?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Ya, Hapus!',
+          cancelButtonText: 'Batal'
+        });
+        if (!result.isConfirmed) return;
+
+        try {
+          const res = await this.api('deleteProduct', product.ID_Produk);
+          this.sukses('Terhapus!', res.message);
+          this.loadProducts();
+        } catch (err) {
+          this.gagal(err);
+        }
+      },
+
+      // -- RESTOCK (BARANG MASUK / AUDIT TRAIL) --
+      openRestockModal(product) {
+        this.restockForm = {
+          id_produk: product.ID_Produk,
+          nama_produk: product.Nama_Produk,
+          stok_sekarang: product.Stok_Tersedia,
+          qty: 12,
+          keterangan: 'Kulakan / Barang Masuk'
+        };
+        this.showRestockModal = true;
+      },
+      closeRestockModal() {
+        this.showRestockModal = false;
+      },
+      async submitRestock() {
+        if (!(this.restockForm.qty > 0)) {
+          Swal.fire('Peringatan', 'Jumlah stok masuk harus minimal 1!', 'warning');
+          return;
+        }
+
+        this.isSavingRestock = true;
+        try {
+          const res = await this.api('restockProduct', {
+            cabang: this.toko.kode,
+            id_produk: this.restockForm.id_produk,
+            qty: Number(this.restockForm.qty),
+            keterangan: this.restockForm.keterangan
+          });
+          this.sukses('Stok Ditambahkan!', res.message);
+          this.showRestockModal = false;
+          this.loadProducts();
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSavingRestock = false;
+        }
+      },
+
+      // -- TRANSFER STOK ANTAR TOKO --
+      openTransferModal(product) {
+        this.transferForm = {
+          id_produk: product.ID_Produk,
+          nama_produk: product.Nama_Produk,
+          stok: product.Stok,
+          ke: '',
+          qty: 1,
+          keterangan: ''
+        };
+        this.showTransferModal = true;
+      },
+      async submitTransfer() {
+        this.isSavingTransfer = true;
+        try {
+          const res = await this.api('transferStock', {
+            id_produk: this.transferForm.id_produk,
+            dari: this.toko.kode,
+            ke: this.transferForm.ke,
+            qty: Number(this.transferForm.qty),
+            keterangan: this.transferForm.keterangan
+          });
+          this.sukses('Stok Dipindahkan!', res.message);
+          this.showTransferModal = false;
+          this.loadProducts();
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSavingTransfer = false;
+        }
+      },
+
+      // -- FAKTUR PEMBELIAN (KULAKAN MULTI-ITEM) --
+      openPurchaseModal() {
+        this.purchaseForm = {
+          no_faktur: '',
+          supplier: '',
+          status_bayar: 'LUNAS',
+          catatan: '',
+          selectedProductId: '',
+          items: []
+        };
+        this.showPurchaseModal = true;
+      },
+      closePurchaseModal() {
+        this.showPurchaseModal = false;
+      },
+      addPurchaseItem() {
+        if (!this.purchaseForm.selectedProductId) return;
+        const prod = this.products.find(p => p.ID_Produk === this.purchaseForm.selectedProductId);
+        if (!prod) return;
+
+        const existing = this.purchaseForm.items.find(i => i.id_produk === prod.ID_Produk);
+        if (existing) {
+          existing.qty = (Number(existing.qty) || 0) + 1;
+          this.calculatePurchaseItem(existing);
+        } else {
+          const harga = Number(prod.Harga_Beli) || 0;
+          this.purchaseForm.items.push({
+            id_produk: prod.ID_Produk,
+            nama_produk: prod.Nama_Produk,
+            harga_beli: harga,
+            qty: 1,
+            subtotal: harga
+          });
+        }
+        this.purchaseForm.selectedProductId = '';
+      },
+      removePurchaseItem(index) {
+        this.purchaseForm.items.splice(index, 1);
+      },
+      calculatePurchaseItem(item) {
+        let q = parseInt(item.qty, 10);
+        if (isNaN(q) || q < 1) q = 1;
+        item.qty = q;
+
+        let p = Number(item.harga_beli);
+        if (isNaN(p) || p < 0) p = 0;
+        item.harga_beli = p;
+
+        item.subtotal = q * p;
+      },
+      async submitPurchaseInvoice() {
+        if (this.purchaseForm.items.length === 0) {
+          Swal.fire('Peringatan', 'Daftar barang pada faktur masih kosong!', 'warning');
+          return;
+        }
+        if (!this.purchaseForm.supplier) {
+          Swal.fire('Peringatan', 'Nama supplier/agen wajib diisi!', 'warning');
+          return;
+        }
+
+        this.isSavingPurchase = true;
+        try {
+          const res = await this.api('processPurchaseInvoice', {
+            cabang: this.toko.kode,
+            no_faktur: this.purchaseForm.no_faktur,
+            supplier: this.purchaseForm.supplier,
+            status_bayar: this.purchaseForm.status_bayar,
+            catatan: this.purchaseForm.catatan,
+            items: this.purchaseForm.items
+          });
+          Swal.fire({ title: 'Faktur Tersimpan!', text: res.message, icon: 'success' });
+          this.showPurchaseModal = false;
+          this.loadProducts(); // Refresh stok & harga modal
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSavingPurchase = false;
+        }
+      }
+    }
+  }).mount('#app')
+</script>
+
+  </body>
+</html>
