@@ -363,6 +363,19 @@
     .panel-bayar .total-besar { font-size: 2rem !important; letter-spacing: -0.03em; }
   }
 
+  /* Kolom jumlah di keranjang: cukup lebar untuk 4 digit, tanpa panah bawaan input angka */
+  .stepper-qty { width: 118px; }
+  .cart-container input[type=number] { -moz-appearance: textfield; appearance: textfield; font-variant-numeric: tabular-nums; }
+  .cart-container input[type=number]::-webkit-outer-spin-button,
+  .cart-container input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  /* Kartu barang yang disorot lewat keyboard (Tab) */
+  .product-card:focus-visible {
+    outline: none;
+    border-color: var(--aksen);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--aksen) 45%, transparent);
+    transform: translateY(-2px);
+  }
+
   /* Baris keranjang ringkas */
   .baris-keranjang { font-size: 0.86rem; padding-top: 0.38rem !important; padding-bottom: 0.38rem !important; }
   .kecil { font-size: 0.76rem; }
@@ -924,10 +937,10 @@
           <div v-show="activeTab === 'kasir'" class="h-100 modul" style="min-height: 0;">
             <div class="row pos-row g-3">
               <!-- Daftar Produk -->
-              <div class="col-md-6 col-lg-4 col-xxl-5 d-flex flex-column h-100" style="min-height: 0;">
+              <div class="col-md-6 col-lg-3 d-flex flex-column h-100" style="min-height: 0;">
                 <div class="card pos-card">
                   <div class="card-header border-bottom-0 pt-3 flex-shrink-0">
-                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang, lalu Enter" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang" v-model="searchQuery" ref="cari" @keyup.enter="addFromSearch">
+                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang, lalu Enter" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang" v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch">
                   </div>
                   <div class="card-body p-2 product-grid">
                     <div v-if="loading" class="text-center py-5">
@@ -935,8 +948,8 @@
                     </div>
                     
                     <div class="row g-2" v-else>
-                      <div class="col-4 col-xxl-3" v-for="(product, i) in filteredProducts" :key="product.ID_Produk" :style="{ '--i': Math.min(i, 24) }">
-                        <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" @click="addToCart(product)">
+                      <div class="col-6" v-for="(product, i) in filteredProducts" :key="product.ID_Produk" :style="{ '--i': Math.min(i, 24) }">
+                        <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" tabindex="0" role="button" :aria-label="'Masukkan ' + product.Nama_Produk + ' ke keranjang'" @click="addToCart(product)" @keydown.enter.prevent="addToCart(product)" @keydown.space.prevent="addToCart(product)">
                           <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                             <h6 class="card-title text-truncate" :title="product.Nama_Produk" style="font-size: 0.85rem;">{{ product.Nama_Produk }}</h6>
                             <p class="card-text text-primary fw-bold mb-1" style="font-size: 0.9rem;">Rp {{ formatNumber(product.Harga_Jual) }}</p>
@@ -951,7 +964,7 @@
               </div>
               
               <!-- Keranjang Belanja -->
-              <div class="col-md-6 col-lg-8 col-xxl-7 d-flex flex-column h-100" style="min-height: 0;">
+              <div class="col-md-6 col-lg-9 d-flex flex-column h-100" style="min-height: 0;">
                 <div class="card pos-card">
                   <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 py-2">
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
@@ -983,9 +996,9 @@
                                 <span class="text-nowrap">&times; {{ formatNumber(item.harga_jual) }}</span>
                               </span>
                             </div>
-                            <div class="input-group input-group-sm flex-shrink-0" style="width: 92px;">
+                            <div class="input-group input-group-sm flex-shrink-0 stepper-qty">
                               <button class="btn btn-outline-secondary px-2" @click="updateQty(index, -1)">-</button>
-                              <input type="number" class="form-control text-center px-1" :data-baris="kunciBaris(item)" v-model.number="item.qty" @change="validateCartQty(item)" @keyup.enter="kembaliKeCari" min="1">
+                              <input type="number" class="form-control text-center px-1" :data-baris="kunciBaris(item)" v-model.number="item.qty" @change="validateCartQty(item)" @keydown.enter.prevent="kembaliKeCari" min="1">
                               <button class="btn btn-outline-secondary px-2" @click="updateQty(index, 1)">+</button>
                             </div>
                             <div class="text-end fw-bold flex-shrink-0 tabular" style="min-width: 84px;">Rp {{ formatNumber(item.subtotal) }}</div>
@@ -2758,8 +2771,9 @@
       },
 
       // -- CART LOGIC --
-      // Kursor langsung ke kolom jumlah barang yang baru diklik/dipindai (hanya di perangkat bermouse,
-      // supaya keyboard layar sentuh tidak muncul). Enter di kolom jumlah kembali ke kotak cari.
+      // Alur keyboard kasir: ketik di kotak cari -> Tab menyorot kartu barang pertama (Tab lagi = berikutnya)
+      // -> Enter memasukkan ke keranjang & kursor pindah ke kolom jumlah -> Enter kembali ke kotak cari.
+      // Fokus otomatis hanya di perangkat bermouse, supaya keyboard layar sentuh tidak muncul.
       fokusQty(item) {
         if (!matchMedia('(pointer: fine)').matches) return;
         this.$nextTick(() => {
@@ -2770,8 +2784,12 @@
           }
         });
       },
+      // Kembali ke kotak cari dengan teksnya tersorot, jadi kasir bisa langsung mengetik barang berikutnya
       kembaliKeCari() {
-        if (this.$refs.cari) this.$refs.cari.focus();
+        const cari = this.$refs.cari;
+        if (!cari) return;
+        cari.focus();
+        cari.select();
       },
       addToCart(product) {
         const satuan = this.satuanBarang(product).find(s => s.harga > 0);
