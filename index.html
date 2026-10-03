@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="dark">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sistem Kasir Toko Sukahati</title>
     <base target="_top">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
@@ -10,14 +13,93 @@
     <style>
   [v-cloak] { display: none; }
 
+  /* =====================================================================
+     TOKEN DESAIN (gaya iOS). Tema gelap = bawaan; terang lewat data-bs-theme="light".
+     Variabel Bootstrap dipetakan ke token ini, jadi semua komponen ikut berganti tema.
+     ===================================================================== */
+  :root, [data-bs-theme=light] {
+    --latar: #f2f2f7;
+    --permukaan: #ffffff;
+    --permukaan-2: #f6f6f9;
+    --isian: rgba(118, 118, 128, 0.12);
+    --isian-input: #eeeef3;
+    --garis: rgba(60, 60, 67, 0.14);
+    --garis-kartu: rgba(60, 60, 67, 0.08);
+    --teks: #1c1c1e;
+    --teks-2: rgba(60, 60, 67, 0.62);
+    --kaca: rgba(255, 255, 255, 0.72);
+    --bayangan: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.06);
+    --bayangan-naik: 0 2px 6px rgba(0, 0, 0, 0.06), 0 16px 40px rgba(0, 0, 0, 0.12);
+    /* warna sistem: untuk isian/tanda, dan versi -teks yang cukup kontras untuk tulisan */
+    --aksen: #007aff;   --aksen-teks: #0062cc;
+    --hijau: #34c759;   --hijau-teks: #248a3d;
+    --merah: #ff3b30;   --merah-teks: #d70015;
+    --oranye: #ff9500;  --oranye-teks: #b25000;
+    --bs-primary-rgb: 0, 98, 204;
+    --bs-success-rgb: 36, 138, 61;
+    --bs-danger-rgb: 215, 0, 21;
+    --bs-warning-rgb: 178, 80, 0;
+    --bs-info-rgb: 0, 98, 204;
+    --bs-tertiary-bg-rgb: 246, 246, 249;
+    --bs-secondary-bg: #f6f6f9;
+  }
+  [data-bs-theme=dark] {
+    --latar: #000000;
+    --permukaan: #1c1c1e;
+    --permukaan-2: #2c2c2e;
+    --isian: rgba(118, 118, 128, 0.24);
+    --isian-input: #2c2c2e;
+    --garis: rgba(84, 84, 88, 0.55);
+    --garis-kartu: rgba(84, 84, 88, 0.45);
+    --teks: #f5f5f7;
+    --teks-2: rgba(235, 235, 245, 0.6);
+    --kaca: rgba(22, 22, 24, 0.72);
+    --bayangan: none;
+    --bayangan-naik: 0 16px 40px rgba(0, 0, 0, 0.55);
+    --aksen: #0a84ff;   --aksen-teks: #409cff;
+    --hijau: #30d158;   --hijau-teks: #30d158;
+    --merah: #ff453a;   --merah-teks: #ff6961;
+    --oranye: #ff9f0a;  --oranye-teks: #ffb340;
+    --bs-primary-rgb: 64, 156, 255;
+    --bs-success-rgb: 48, 209, 88;
+    --bs-danger-rgb: 255, 105, 97;
+    --bs-warning-rgb: 255, 179, 64;
+    --bs-info-rgb: 64, 156, 255;
+    --bs-tertiary-bg-rgb: 44, 44, 46;
+    --bs-secondary-bg: #2c2c2e;
+  }
+  [data-bs-theme] {
+    /* tombol berwarna: dibuat cukup gelap agar tulisan putih tetap terbaca di kedua tema */
+    --tombol-aksen: #0071e3;
+    --tombol-hijau: #1e8e3e;
+    --tombol-merah: #d70015;
+    --pegas: cubic-bezier(0.32, 0.72, 0, 1);       /* kurva "sheet" iOS */
+    --pegas-pantul: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --huruf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --bs-body-bg: var(--latar);
+    --bs-body-color: var(--teks);
+    --bs-body-font-family: var(--huruf);
+    --bs-emphasis-color: var(--teks);
+    --bs-secondary-color: var(--teks-2);
+    --bs-tertiary-color: var(--teks-2);
+    --bs-border-color: var(--garis);
+    --bs-border-color-translucent: var(--garis);
+    --bs-heading-color: var(--teks);
+    --bs-link-color-rgb: var(--bs-primary-rgb);
+    color-scheme: light;
+  }
+  [data-bs-theme=dark] { color-scheme: dark; }
+
   html, body {
     height: 100vh;
     height: 100dvh;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #f4f6f9;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--latar);
+    font-family: var(--huruf);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
   }
 
   #app {
@@ -40,7 +122,7 @@
     flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
-    padding: 12px;
+    padding: 14px;
   }
 
   .pos-row {
@@ -54,73 +136,557 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 10px;
   }
 
   .product-grid {
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto !important;
-    padding: 10px;
+    padding: 12px;
   }
 
   .cart-container {
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto !important;
-    background-color: #f8f9fa;
-    background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
-    background-size: 16px 16px;
   }
-
-  .cart-footer-fixed {
-    flex-shrink: 0;
-    background: #ffffff;
-    border-top: 2px solid #dee2e6;
-    padding: 12px 16px;
-    box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  .product-card {
-    cursor: pointer;
-    transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
-    border: 2px solid transparent;
-  }
-  .product-card:active { transform: scale(0.96); }
-  .product-card:hover { border-color: #0d6efd; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15); }
 
   .cursor-pointer { cursor: pointer; }
+  .tabular { font-variant-numeric: tabular-nums; }
 
-  /* Scrollbar custom agar selalu terlihat jelas dan mudah di-scroll */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* ===== ANIMASI ===== */
+  @keyframes muncul {
+    from { opacity: 0; transform: translateY(10px) scale(0.995); }
   }
-  ::-webkit-scrollbar-track {
-    background: #e9ecef;
-    border-radius: 4px;
+  @keyframes pop-ios {
+    from { opacity: 0; transform: scale(1.12); }
+    to { opacity: 1; transform: scale(1); }
   }
-  ::-webkit-scrollbar-thumb {
-    background: #adb5bd;
-    border-radius: 4px;
+  @keyframes tutup-ios {
+    to { opacity: 0; transform: scale(0.94); }
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #6c757d;
+  @keyframes melayang {
+    from { transform: translate3d(-6%, -4%, 0) scale(1); }
+    to { transform: translate3d(6%, 5%, 0) scale(1.15); }
+  }
+  /* Modul (Kasir/Inventori/Laporan/Pengguna) dan isi laporan meluncur halus setiap ditampilkan */
+  .modul,
+  .report-print-area > .table-responsive,
+  .report-print-area > .p-3 {
+    animation: muncul 0.5s var(--pegas) both;
+  }
+  /* Ganti tema: transisi silang lewat View Transitions API */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.45s;
   }
 
-  /* Thermal Receipt Styling */
+  /* ===== NAVBAR KACA ===== */
+  .navbar.kaca {
+    background: var(--kaca);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--garis);
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+  }
+  .navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: inline-flex;
+    align-items: center;
+  }
+  .ikon-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    background: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 100%);
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.35);
+  }
+  .ikon-app-besar {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    font-size: 1.8rem;
+    box-shadow: 0 12px 30px rgba(10, 132, 255, 0.4);
+  }
+  .navbar-nav { gap: 2px; }
+  .navbar-nav .nav-link {
+    border-radius: 10px;
+    padding: 0.4rem 0.8rem !important;
+    color: var(--teks-2);
+    font-weight: 600;
+  }
+  .navbar-nav .nav-link:hover { color: var(--teks); }
+  .navbar-nav .nav-link.active {
+    color: var(--teks);
+    background: var(--isian);
+  }
+  .btn-ikon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50% !important;
+    border: 0;
+    background: var(--isian);
+    color: var(--teks);
+  }
+  .btn-ikon:hover { background: var(--isian); color: var(--aksen-teks); }
+
+  /* ===== KARTU ===== */
+  .card {
+    --bs-card-bg: var(--permukaan);
+    --bs-card-border-color: var(--garis-kartu);
+    --bs-card-border-radius: 20px;
+    --bs-card-inner-border-radius: 19px;
+    --bs-card-cap-bg: transparent;
+    box-shadow: var(--bayangan);
+  }
+  .card-header {
+    border-bottom: 1px solid var(--garis);
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+  }
+  .ubin {
+    background: var(--permukaan-2);
+    border-radius: 16px;
+    transition: transform 0.4s var(--pegas);
+  }
+  .ubin:hover { transform: translateY(-2px); }
+  .ubin .fs-4 { letter-spacing: -0.02em; }
+
+  /* Kartu produk di layar kasir */
+  .product-card {
+    cursor: pointer;
+    background: var(--permukaan-2);
+    border: 1px solid transparent;
+    border-radius: 16px !important;
+    box-shadow: none;
+    transition: transform 0.45s var(--pegas), box-shadow 0.3s ease, border-color 0.2s ease;
+    animation: muncul 0.5s var(--pegas) both;
+    animation-delay: calc(var(--i, 0) * 18ms);
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--aksen) 45%, transparent);
+    box-shadow: var(--bayangan-naik);
+  }
+  .product-card:active {
+    transform: scale(0.94);
+    transition-duration: 0.15s;
+  }
+  .product-card .card-title { font-weight: 600; color: var(--teks); }
+  .product-card .card-text {
+    color: var(--teks) !important;
+    font-size: 0.95rem !important;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== KERANJANG ===== */
+  .list-group {
+    --bs-list-group-bg: transparent;
+    --bs-list-group-color: var(--teks);
+    --bs-list-group-border-color: var(--garis);
+  }
+  .cart-footer-fixed {
+    flex-shrink: 0;
+    background: var(--kaca);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--garis);
+    padding: 14px 16px;
+  }
+  .cart-footer-fixed .fs-4 { letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  /* item keranjang meluncur masuk dari atas, keluar bergeser ke kanan */
+  .item-enter-active { transition: opacity 0.4s ease, transform 0.55s var(--pegas); }
+  .cart-container .list-group { position: relative; }
+  .item-leave-active { transition: opacity 0.2s ease, transform 0.25s ease; position: absolute; width: 100%; }
+  .item-enter-from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+  .item-leave-to { opacity: 0; transform: translateX(28px); }
+  .item-move { transition: transform 0.5s var(--pegas); }
+
+  /* Stepper jumlah barang di keranjang: satu kapsul ala iOS */
+  .cart-container .input-group {
+    flex-wrap: nowrap;
+    background: var(--isian);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cart-container .input-group > .btn {
+    --bs-btn-bg: transparent;
+    width: 30px;
+    border-radius: 0 !important;
+  }
+  .cart-container .input-group > .form-control {
+    background: transparent;
+    border-radius: 0 !important;
+    font-weight: 600;
+    box-shadow: none;
+  }
+  .cart-container .list-group-item { padding-top: 0.7rem !important; padding-bottom: 0.7rem !important; }
+
+  /* Tombol uang cepat: chip */
+  .btn-quick-cash {
+    font-size: 0.74rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--isian);
+    color: var(--teks);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s var(--pegas), background-color 0.2s ease, color 0.2s ease;
+  }
+  .btn-quick-cash:hover {
+    background: color-mix(in srgb, var(--aksen) 18%, transparent);
+    color: var(--aksen-teks);
+  }
+  .btn-quick-cash:active { transform: scale(0.92); }
+
+  /* ===== TOMBOL ===== */
+  .btn {
+    --bs-btn-border-radius: 12px;
+    --bs-btn-font-weight: 600;
+    --bs-btn-focus-box-shadow: 0 0 0 4px color-mix(in srgb, var(--aksen) 30%, transparent);
+    transition: transform 0.35s var(--pegas), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn:active:not(:disabled) { transform: scale(0.96); transition-duration: 0.12s; }
+  .btn-sm { --bs-btn-border-radius: 10px; }
+  .btn-lg { --bs-btn-border-radius: 16px; --bs-btn-font-size: 1.05rem; letter-spacing: 0.01em; }
+  .btn-primary {
+    --bs-btn-bg: var(--tombol-aksen);
+    --bs-btn-border-color: var(--tombol-aksen);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--tombol-aksen) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--tombol-aksen) 88%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--tombol-aksen) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--tombol-aksen) 80%, #000);
+    --bs-btn-disabled-bg: var(--tombol-aksen);
+    --bs-btn-disabled-border-color: var(--tombol-aksen);
+  }
+  .btn-success {
+    --bs-btn-bg: var(--tombol-hijau);
+    --bs-btn-border-color: var(--tombol-hijau);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--tombol-hijau) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--tombol-hijau) 88%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--tombol-hijau) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--tombol-hijau) 80%, #000);
+    --bs-btn-disabled-bg: var(--tombol-hijau);
+    --bs-btn-disabled-border-color: var(--tombol-hijau);
+  }
+  .btn-success:not(:disabled) { box-shadow: 0 8px 22px color-mix(in srgb, var(--tombol-hijau) 35%, transparent); }
+  .btn-danger {
+    --bs-btn-bg: var(--tombol-merah);
+    --bs-btn-border-color: var(--tombol-merah);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--tombol-merah) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--tombol-merah) 88%, #000);
+  }
+  /* Tombol sekunder & garis: gaya "tinted" iOS (isian tipis berwarna, tanpa garis) */
+  .btn-secondary,
+  .btn-outline-secondary,
+  .btn-outline-dark {
+    --bs-btn-bg: var(--isian);
+    --bs-btn-color: var(--teks);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--teks) 14%, transparent);
+    --bs-btn-hover-color: var(--teks);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-bg: color-mix(in srgb, var(--teks) 20%, transparent);
+    --bs-btn-active-color: var(--teks);
+    --bs-btn-active-border-color: transparent;
+  }
+  .btn-outline-primary {
+    --bs-btn-bg: color-mix(in srgb, var(--aksen) 12%, transparent);
+    --bs-btn-color: var(--aksen-teks);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--aksen) 22%, transparent);
+    --bs-btn-hover-color: var(--aksen-teks);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-bg: color-mix(in srgb, var(--aksen) 28%, transparent);
+    --bs-btn-active-color: var(--aksen-teks);
+    --bs-btn-active-border-color: transparent;
+  }
+  .btn-outline-success {
+    --bs-btn-bg: color-mix(in srgb, var(--hijau) 14%, transparent);
+    --bs-btn-color: var(--hijau-teks);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--hijau) 24%, transparent);
+    --bs-btn-hover-color: var(--hijau-teks);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-bg: color-mix(in srgb, var(--hijau) 30%, transparent);
+    --bs-btn-active-color: var(--hijau-teks);
+    --bs-btn-active-border-color: transparent;
+  }
+  .btn-outline-danger {
+    --bs-btn-bg: color-mix(in srgb, var(--merah) 12%, transparent);
+    --bs-btn-color: var(--merah-teks);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--merah) 22%, transparent);
+    --bs-btn-hover-color: var(--merah-teks);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-bg: color-mix(in srgb, var(--merah) 28%, transparent);
+    --bs-btn-active-color: var(--merah-teks);
+    --bs-btn-active-border-color: transparent;
+  }
+
+  /* Segmented control (sub-tab laporan) */
+  .segmen {
+    background: var(--isian);
+    padding: 3px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+  .segmen > .btn {
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent;
+    color: var(--teks-2);
+    box-shadow: none;
+  }
+  .segmen > .btn:hover { color: var(--teks); background: transparent; }
+  .segmen > .btn.btn-primary {
+    background: var(--permukaan);
+    color: var(--teks);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+  [data-bs-theme=dark] .segmen > .btn.btn-primary { background: #636366; }
+
+  /* ===== FORMULIR (isian lembut ala iOS) ===== */
+  .form-control,
+  .form-select,
+  .input-group-text {
+    background-color: var(--isian-input);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: var(--teks);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
+  }
+  .form-control-sm, .form-select-sm { border-radius: 10px; }
+  .form-control-lg { border-radius: 14px; }
+  .form-control::placeholder { color: var(--teks-2); }
+  .form-control:focus,
+  .form-select:focus {
+    background-color: var(--permukaan);
+    color: var(--teks);
+    border-color: var(--aksen);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--aksen) 22%, transparent);
+  }
+  .form-check-input:checked {
+    background-color: var(--tombol-aksen);
+    border-color: var(--tombol-aksen);
+  }
+  .form-label { color: var(--teks-2); }
+
+  /* ===== TABEL ===== */
+  .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--teks);
+    --bs-table-border-color: var(--garis);
+    --bs-table-striped-bg: transparent;
+    --bs-table-striped-color: var(--teks);
+    --bs-table-hover-bg: color-mix(in srgb, var(--aksen) 7%, transparent);
+    --bs-table-hover-color: var(--teks);
+    font-variant-numeric: tabular-nums;
+  }
+  .table > thead > tr > th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--teks-2);
+    background: var(--kaca);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--garis);
+    white-space: nowrap;
+  }
+  .table > tbody > tr > td { border-color: var(--garis); }
+  /* Kolom toko yang sedang dikelola di Inventori */
+  .table-primary {
+    --bs-table-color: var(--teks);
+    --bs-table-bg: color-mix(in srgb, var(--aksen) 10%, transparent);
+    --bs-table-border-color: var(--garis);
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: color-mix(in srgb, var(--aksen) 16%, transparent);
+    --bs-table-hover-color: var(--teks);
+  }
+  .table-bordered > :not(caption) > * > * { border-color: var(--garis); }
+  .table > tbody > tr { transition: background-color 0.2s ease; }
+  /* Nomor transaksi & waktu di laporan tidak terpotong ke baris kedua */
+  .report-print-area .table > tbody > tr > td:not([colspan]):nth-child(-n+2) { white-space: nowrap; }
+
+  /* ===== LENCANA: nuansa lembut (latar transparan berwarna, tulisan kontras) ===== */
+  .badge {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 0.4em 0.72em;
+    border-radius: 999px;
+  }
+  .badge.bg-success { background-color: color-mix(in srgb, var(--hijau) 18%, transparent) !important; color: var(--hijau-teks) !important; }
+  .badge.bg-danger { background-color: color-mix(in srgb, var(--merah) 16%, transparent) !important; color: var(--merah-teks) !important; }
+  .badge.bg-warning { background-color: color-mix(in srgb, var(--oranye) 18%, transparent) !important; color: var(--oranye-teks) !important; }
+  .badge.bg-primary,
+  .badge.bg-info { background-color: color-mix(in srgb, var(--aksen) 16%, transparent) !important; color: var(--aksen-teks) !important; }
+  .badge.bg-secondary,
+  .badge.bg-dark,
+  .badge.bg-body-tertiary { background-color: var(--isian) !important; color: var(--teks) !important; }
+
+  .alert-light {
+    --bs-alert-bg: var(--permukaan-2);
+    --bs-alert-color: var(--teks);
+    --bs-alert-border-color: transparent;
+    border-radius: 16px;
+  }
+
+  /* ===== MODAL: sheet ala iPhone ===== */
+  .modal.d-block {
+    background: rgba(0, 0, 0, 0.38) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+  }
+  .modal-content {
+    background: var(--permukaan);
+    border: 1px solid var(--garis-kartu) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+  }
+  .modal-header {
+    border-bottom: 1px solid var(--garis);
+    background: transparent;
+  }
+  .modal-title { font-weight: 700; letter-spacing: -0.01em; }
+  .modal-footer {
+    border-top: 1px solid var(--garis);
+    background: transparent;
+  }
+  .modal.sheet-enter-active,
+  .modal.sheet-leave-active { transition: opacity 0.35s ease; }
+  .modal.sheet-enter-active .modal-dialog { transition: transform 0.55s var(--pegas), opacity 0.35s ease; }
+  .modal.sheet-leave-active .modal-dialog { transition: transform 0.28s cubic-bezier(0.4, 0, 1, 1), opacity 0.25s ease; }
+  .modal.sheet-enter-from,
+  .modal.sheet-leave-to { opacity: 0; }
+  .modal.sheet-enter-from .modal-dialog,
+  .modal.sheet-leave-to .modal-dialog { transform: translateY(48px) scale(0.96); opacity: 0; }
+  /* Di HP modal menempel di bawah layar dan meluncur naik, seperti sheet iOS */
+  @media screen and (max-width: 575.98px) {
+    .modal-dialog.modal-dialog-centered {
+      align-items: flex-end;
+      min-height: 100%;
+      margin: 0;
+    }
+    .modal-dialog-centered .modal-content { border-radius: 24px 24px 0 0 !important; }
+    .modal.sheet-enter-from .modal-dialog,
+    .modal.sheet-leave-to .modal-dialog { transform: translateY(100%); opacity: 1; }
+  }
+
+  /* ===== DIALOG SWEETALERT: alert iOS ===== */
+  html[data-bs-theme] {
+    --swal2-background: var(--permukaan);
+    --swal2-color: var(--teks);
+    --swal2-border-radius: 22px;
+    --swal2-backdrop: rgba(0, 0, 0, 0.38);
+    --swal2-show-animation: pop-ios 0.45s var(--pegas);
+    --swal2-hide-animation: tutup-ios 0.18s ease forwards;
+    --swal2-confirm-button-background-color: var(--tombol-aksen);
+    --swal2-confirm-button-border-radius: 12px;
+    --swal2-cancel-button-background-color: var(--isian);
+    --swal2-cancel-button-color: var(--teks);
+    --swal2-cancel-button-border-radius: 12px;
+    --swal2-deny-button-border-radius: 12px;
+    --swal2-input-background: var(--isian-input);
+    --swal2-input-border: 1px solid transparent;
+    --swal2-input-border-radius: 12px;
+    --swal2-validation-message-background: var(--permukaan-2);
+    --swal2-validation-message-color: var(--teks);
+  }
+  .swal2-container.swal2-backdrop-show {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .swal2-popup { font-family: var(--huruf); border: 1px solid var(--garis-kartu); }
+  .swal2-title { font-size: 1.3rem !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+  .swal2-html-container { color: var(--teks-2) !important; font-size: 1rem !important; }
+  .swal2-styled { font-weight: 600 !important; padding: 0.6em 1.4em !important; }
+  .swal2-input { color: var(--teks) !important; }
+
+  /* ===== HALAMAN LOGIN: kartu kaca di atas latar aurora ===== */
+  .latar-login {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--latar);
+  }
+  .latar-login::before,
+  .latar-login::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    animation: melayang 16s ease-in-out infinite alternate;
+  }
+  .latar-login::before {
+    top: -20vmax;
+    left: -15vmax;
+    background: radial-gradient(circle, #0a84ff 0%, transparent 65%);
+  }
+  .latar-login::after {
+    bottom: -25vmax;
+    right: -15vmax;
+    background: radial-gradient(circle, #bf5af2 0%, transparent 65%);
+    animation-duration: 20s;
+    animation-direction: alternate-reverse;
+  }
+  [data-bs-theme=light] .latar-login::before,
+  [data-bs-theme=light] .latar-login::after { opacity: 0.3; }
+  .kartu-login {
+    width: 360px;
+    max-width: calc(100% - 32px);
+    background: var(--kaca) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(30px);
+    backdrop-filter: saturate(180%) blur(30px);
+    border-radius: 28px !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    animation: muncul 0.8s var(--pegas) both;
+  }
+  .kartu-login input[type=password] {
+    letter-spacing: 0.45em;
+    font-weight: 600;
+  }
+  .tombol-tema-login {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+  }
+
+  /* Scrollbar tipis mengikuti tema */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--isian); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--teks-2); }
+
+  /* Struk tetap seperti kertas putih, apa pun temanya */
   .receipt-box {
     background: #fff;
-    color: #212529;
+    color: #1c1c1e;
     font-family: 'Courier New', Courier, monospace;
     font-size: 13px;
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px dashed #ced4da;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px dashed #d1d1d6;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   }
   .receipt-divider {
-    border-top: 1px dashed #6c757d;
+    border-top: 1px dashed #8e8e93;
     margin: 8px 0;
   }
   .receipt-table td {
@@ -128,25 +694,16 @@
     vertical-align: top;
   }
 
-  /* Quick Cash Buttons */
-  .btn-quick-cash {
-    font-size: 0.72rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    background: #f8f9fa;
-    color: #495057;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .btn-quick-cash:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
-    color: #0d6efd;
+  /* Hormati pengaturan "kurangi gerakan" di perangkat */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
-  /* Print Media Styles */
+  /* Print Media Styles (tema terang dipasang otomatis sebelum mencetak, lihat JavaScript.html) */
   @media print {
     /* Margin box yang diisi sendiri menggantikan header/footer bawaan browser
        (tanggal, judul, URL, nomor halaman). Halaman default (struk) bermargin tipis
@@ -165,11 +722,26 @@
       @bottom-left { content: ""; }
       @bottom-right { content: counter(page) " / " counter(pages); font-size: 9pt; }
     }
-    
+
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+    /* Modal yang sedang beranimasi masuk tetap tercetak utuh; yang sedang menutup tidak ikut tercetak */
+    .modal, .modal-dialog {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .modal.sheet-leave-active {
+      display: none !important;
+    }
+
     .no-print {
       display: none !important;
     }
-    
+
     /* Lepas kunci tinggi layar agar isi panjang mengalir ke semua halaman */
     html, body, #app, .main-wrapper, .pos-container, .pos-card, .report-print-area {
       height: auto !important;
@@ -184,7 +756,7 @@
     #app, .main-wrapper, .pos-card {
       display: block;
     }
-    
+
     /* Cetak Laporan */
     .report-print-area {
       page: laporan;
@@ -194,14 +766,22 @@
     .report-print-area thead {
       position: static;
     }
-    
+    /* Tabel lebar tetap muat di kertas: huruf lebih kecil, isi sel boleh turun baris, tanpa scroll */
+    .report-print-area .table { font-size: 9pt; }
+    .report-print-area .table > tbody > tr > td { white-space: normal !important; }
+    .report-print-area .table-responsive { overflow: visible !important; }
+    .report-print-area .table > thead > tr > th {
+      background: #fff !important;
+      color: #000 !important;
+    }
+
     /* Cetak Struk Kasir: saat modal struk terbuka, hanya struk yang dicetak.
        Modal dilepas dari posisi layar (fixed/tengah/overflow) supaya struk mengalir dari pojok kiri atas kertas. */
-    #app:has(.receipt-print-area) .main-wrapper {
+    #app:has(.modal:not(.sheet-leave-active) .receipt-print-area) .main-wrapper {
       display: none !important;
     }
-    .modal:has(.receipt-print-area),
-    .modal:has(.receipt-print-area) :is(.modal-dialog, .modal-content, .modal-body) {
+    .modal:not(.sheet-leave-active):has(.receipt-print-area),
+    .modal:not(.sheet-leave-active):has(.receipt-print-area) :is(.modal-dialog, .modal-content, .modal-body) {
       position: static !important;
       display: block !important;
       min-height: 0 !important;
@@ -212,6 +792,10 @@
       background: #fff !important;
       border: none !important;
       box-shadow: none !important;
+    }
+    /* Printer thermal: semua tulisan struk hitam pekat */
+    .receipt-print-area, .receipt-print-area * {
+      color: #000 !important;
     }
     .receipt-print-area {
       width: 100%;
@@ -231,10 +815,12 @@
     <div id="app" v-cloak>
       
       <!-- HALAMAN LOGIN (Hak Akses Multi-User & Cabang) -->
-      <div v-if="!isLoggedIn" class="d-flex align-items-center justify-content-center h-100 bg-light">
-        <div class="card shadow p-4" style="width: 350px; border-radius: 15px;">
+      <div v-if="!isLoggedIn" class="latar-login d-flex align-items-center justify-content-center h-100">
+        <button type="button" class="btn btn-ikon tombol-tema-login" @click="gantiTema" :title="tema === 'dark' ? 'Pakai tema terang' : 'Pakai tema gelap'"><i class="fas" :class="tema === 'dark' ? 'fa-sun' : 'fa-moon'"></i></button>
+        <div class="card kartu-login p-4">
           <div class="text-center mb-4">
-            <h3 class="text-primary fw-bold"><i class="fas fa-store"></i> Toko Sukahati</h3>
+            <div class="ikon-app ikon-app-besar mb-3"><i class="fas fa-store"></i></div>
+            <h3 class="fw-bold mb-1">Toko Sukahati</h3>
             <p class="text-muted small">Silakan masuk ke sistem kasir</p>
           </div>
           
@@ -253,10 +839,10 @@
       <!-- MAIN APP -->
       <div v-else class="main-wrapper">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm flex-shrink-0 no-print">
+        <nav class="navbar navbar-expand-lg flex-shrink-0 no-print kaca">
           <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
-              <i class="fas fa-store me-2"></i>Toko Sukahati <span v-if="userRole !== 'admin'" class="badge bg-light text-primary ms-2">{{ toko.nama }}</span>
+              <span class="ikon-app me-2"><i class="fas fa-store"></i></span>Toko Sukahati <span v-if="userRole !== 'admin'" class="badge bg-primary ms-2">{{ toko.nama }}</span>
             </a>
             <select v-if="userRole === 'admin'" class="form-select form-select-sm w-auto me-auto" title="Toko yang sedang dikelola" :value="toko.kode" @change="gantiToko($event.target.value)">
               <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">{{ t.nama }}</option>
@@ -272,8 +858,9 @@
                 <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'pengguna'}" @click="openPengguna(); mobileNavOpen = false"><i class="fas fa-users"></i> Pengguna</button>
               </div>
               <div class="d-flex align-items-center mt-2 mt-lg-0">
-                <span class="text-white me-3"><i class="fas fa-user-circle"></i> {{ namaPengguna }}</span>
-                <button class="btn btn-sm btn-outline-light" @click="logout"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                <button type="button" class="btn btn-ikon me-2" @click="gantiTema" :title="tema === 'dark' ? 'Pakai tema terang' : 'Pakai tema gelap'"><i class="fas" :class="tema === 'dark' ? 'fa-sun' : 'fa-moon'"></i></button>
+                <span class="me-3 fw-semibold"><i class="fas fa-user-circle text-body-secondary"></i> {{ namaPengguna }}</span>
+                <button class="btn btn-sm btn-outline-secondary" @click="logout"><i class="fas fa-sign-out-alt"></i> Keluar</button>
               </div>
             </div>
           </div>
@@ -283,13 +870,13 @@
         <div class="pos-container">
           
           <!-- MODUL KASIR -->
-          <div v-show="activeTab === 'kasir'" class="h-100" style="min-height: 0;">
+          <div v-show="activeTab === 'kasir'" class="h-100 modul" style="min-height: 0;">
             <div class="row pos-row g-3">
               <!-- Daftar Produk -->
               <div class="col-md-7 d-flex flex-column h-100" style="min-height: 0;">
-                <div class="card shadow-sm pos-card">
-                  <div class="card-header bg-white border-bottom-0 pt-3 flex-shrink-0">
-                    <input type="text" class="form-control form-control-lg bg-light" placeholder="🔍 Cari nama / kode barang, Enter untuk masuk keranjang..." v-model="searchQuery" @keyup.enter="addFromSearch">
+                <div class="card pos-card">
+                  <div class="card-header border-bottom-0 pt-3 flex-shrink-0">
+                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari nama / kode barang, Enter untuk masuk keranjang..." v-model="searchQuery" @keyup.enter="addFromSearch">
                   </div>
                   <div class="card-body p-2 product-grid">
                     <div v-if="loading" class="text-center py-5">
@@ -297,12 +884,12 @@
                     </div>
                     
                     <div class="row g-2" v-else>
-                      <div class="col-4 col-md-3 col-lg-2" v-for="product in filteredProducts" :key="product.ID_Produk">
+                      <div class="col-4 col-md-3 col-lg-2" v-for="(product, i) in filteredProducts" :key="product.ID_Produk" :style="{ '--i': Math.min(i, 24) }">
                         <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" @click="addToCart(product)">
                           <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                             <h6 class="card-title text-truncate" :title="product.Nama_Produk" style="font-size: 0.85rem;">{{ product.Nama_Produk }}</h6>
                             <p class="card-text text-primary fw-bold mb-1" style="font-size: 0.9rem;">Rp {{ formatNumber(product.Harga_Jual) }}</p>
-                            <small class="text-muted" style="font-size: 0.7rem;">Stok: {{ product.Stok_Tersedia }}</small>
+                            <small :class="menipis(product) ? 'text-danger fw-semibold' : 'text-muted'" style="font-size: 0.72rem;">Stok {{ product.Stok_Tersedia }}</small>
                           </div>
                         </div>
                       </div>
@@ -313,20 +900,20 @@
               
               <!-- Keranjang Belanja -->
               <div class="col-md-5 d-flex flex-column h-100" style="min-height: 0;">
-                <div class="card shadow-sm pos-card">
-                  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-shrink-0 py-2">
+                <div class="card pos-card">
+                  <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 py-2">
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
                     <div class="d-flex align-items-center gap-2">
-                      <button v-if="shift" class="btn btn-sm btn-outline-light py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan"><i class="fas fa-money-bill-wave me-1"></i>Kas</button>
-                      <button v-if="shift" class="btn btn-sm btn-outline-light py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir"><i class="fas fa-lock me-1"></i>Tutup Kasir</button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan"><i class="fas fa-money-bill-wave me-1"></i>Kas</button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir"><i class="fas fa-lock me-1"></i>Tutup Kasir</button>
                       <span class="badge bg-danger rounded-pill">{{ cart.length }} item</span>
                     </div>
                   </div>
                   
                   <!-- Area Item Keranjang (Scrollable) -->
                   <div class="card-body p-0 cart-container">
-                    <ul class="list-group list-group-flush">
-                      <li class="list-group-item text-center text-muted py-5" v-if="cart.length === 0">
+                    <transition-group tag="ul" name="item" class="list-group list-group-flush">
+                      <li class="list-group-item text-center text-muted py-5" v-if="cart.length === 0" key="kosong">
                         <i class="fas fa-cart-plus fa-3x mb-3 text-secondary opacity-50"></i><br>Keranjang masih kosong
                       </li>
                       <li class="list-group-item py-2 px-3" v-for="(item, index) in cart" :key="item.id_produk">
@@ -343,7 +930,7 @@
                           <span class="fw-bold text-primary">Rp {{ formatNumber(item.subtotal) }}</span>
                         </div>
                       </li>
-                    </ul>
+                    </transition-group>
                   </div>
                   
                   <!-- Area Kasir Bawah / Footer (Fixed, Tidak akan terdorong keluar layar) -->
@@ -356,7 +943,7 @@
                     <div class="row g-2 mb-2">
                       <div class="col-6">
                         <label class="form-label small text-muted mb-0">Metode</label>
-                        <select class="form-select form-select-sm bg-light" v-model="metodePembayaran">
+                        <select class="form-select form-select-sm" v-model="metodePembayaran">
                           <option value="Tunai">Tunai</option>
                           <option value="Transfer">Transfer</option>
                           <option value="QRIS">QRIS</option>
@@ -364,7 +951,7 @@
                       </div>
                       <div class="col-6" v-if="metodePembayaran === 'Tunai'">
                         <label class="form-label small text-muted mb-0">Uang Diterima</label>
-                        <input type="number" class="form-control form-control-sm bg-light fw-bold text-success" v-model.number="jumlahBayar">
+                        <input type="number" class="form-control form-control-sm fw-bold text-success" v-model.number="jumlahBayar">
                         <div class="d-flex flex-wrap gap-1 mt-1">
                           <button type="button" class="btn-quick-cash" @click="setQuickCash('pas')">Pas</button>
                           <button type="button" class="btn-quick-cash" @click="setQuickCash(10000)">10rb</button>
@@ -380,10 +967,10 @@
                       <span class="fw-bold">Rp {{ formatNumber(kembalian) }}</span>
                     </div>
                     
-                    <button v-if="shiftDimuat && !shift" class="btn btn-primary btn-lg w-100 fw-bold py-2 shadow-sm" @click="bukaKasir">
+                    <button v-if="shiftDimuat && !shift" class="btn btn-primary btn-lg w-100 fw-bold py-2" @click="bukaKasir">
                       <i class="fas fa-lock-open me-2"></i>BUKA KASIR
                     </button>
-                    <button v-else class="btn btn-success btn-lg w-100 fw-bold py-2 shadow-sm" :disabled="!canCheckout || isProcessing" @click="checkout">
+                    <button v-else class="btn btn-success btn-lg w-100 fw-bold py-2" :disabled="!canCheckout || isProcessing" @click="checkout">
                       <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2" role="status"></span>
                       {{ isProcessing ? 'MEMPROSES...' : 'BAYAR SEKARANG' }}
                     </button>
@@ -394,9 +981,9 @@
           </div>
 
           <!-- MODUL INVENTORI (Khusus Admin) -->
-          <div v-if="userRole === 'admin'" v-show="activeTab === 'inventori'" class="h-100" style="min-height: 0;">
-            <div class="card shadow-sm pos-card">
-              <div class="card-header bg-white py-2 flex-shrink-0">
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'inventori'" class="h-100 modul" style="min-height: 0;">
+            <div class="card pos-card">
+              <div class="card-header py-2 flex-shrink-0">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                   <h5 class="mb-0 text-primary"><i class="fas fa-boxes me-2"></i> Master Data Barang</h5>
                   <div class="d-flex align-items-center gap-2">
@@ -409,10 +996,10 @@
                 </div>
                 <div class="row g-2">
                   <div class="col-md-8 col-sm-12">
-                    <input type="text" class="form-control form-control-sm bg-light" placeholder="🔍 Cari nama barang / kode / kategori..." v-model="inventorySearchQuery">
+                    <input type="text" class="form-control form-control-sm" placeholder="🔍 Cari nama barang / kode / kategori..." v-model="inventorySearchQuery">
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <select class="form-select form-select-sm bg-light" v-model="inventoryCategoryFilter">
+                    <select class="form-select form-select-sm" v-model="inventoryCategoryFilter">
                       <option value="">Semua Kategori ({{ products.length }} produk)</option>
                       <option v-for="kat in categoriesList" :key="kat" :value="kat">{{ kat }}</option>
                     </select>
@@ -422,7 +1009,7 @@
               <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
                  <div class="table-responsive">
                    <table class="table table-hover align-middle mb-0">
-                     <thead class="table-light sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">ID</th>
                          <th>Nama Produk</th>
@@ -438,8 +1025,8 @@
                          <td class="ps-3 text-muted small">{{ product.ID_Produk }}</td>
                          <td class="fw-bold">{{ product.Nama_Produk }}</td>
                          <td><span class="badge bg-secondary">{{ product.Kategori }}</span></td>
-                         <td>Rp {{ formatNumber(product.Harga_Beli) }}</td>
-                         <td class="text-primary fw-bold">Rp {{ formatNumber(product.Harga_Jual) }}</td>
+                         <td class="text-nowrap">Rp {{ formatNumber(product.Harga_Beli) }}</td>
+                         <td class="text-primary fw-bold text-nowrap">Rp {{ formatNumber(product.Harga_Jual) }}</td>
                          <td class="text-center" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}">
                             <span class="badge rounded-pill" :class="product.Stok[t.kode] > product.Stok_Minimum ? 'bg-success' : 'bg-danger'" :title="'Stok minimum: ' + product.Stok_Minimum">
                                {{ product.Stok[t.kode] }}
@@ -465,9 +1052,9 @@
           </div>
 
           <!-- MODUL PENGGUNA (Khusus Admin) -->
-          <div v-if="userRole === 'admin'" v-show="activeTab === 'pengguna'" class="h-100" style="min-height: 0;">
-            <div class="card shadow-sm pos-card">
-              <div class="card-header bg-white py-2 flex-shrink-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'pengguna'" class="h-100 modul" style="min-height: 0;">
+            <div class="card pos-card">
+              <div class="card-header py-2 flex-shrink-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                   <h5 class="mb-0 text-primary"><i class="fas fa-users me-2"></i> Pengguna</h5>
                   <div class="small text-muted">Tiap orang punya PIN sendiri, sehingga penjualan dan perubahan stok tercatat atas namanya.</div>
@@ -477,7 +1064,7 @@
               <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
                 <div class="table-responsive">
                   <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light sticky-top">
+                    <thead class="sticky-top">
                       <tr>
                         <th class="ps-3">Nama</th>
                         <th>Peran</th>
@@ -492,7 +1079,7 @@
                         <td><span v-if="u.toko === 'ADMIN'" class="badge bg-dark">Admin (semua toko)</span><span v-else>Kasir {{ namaToko(u.toko) }}</span></td>
                         <td><span class="badge" :class="u.aktif ? 'bg-success' : 'bg-secondary'">{{ u.aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
                         <td>
-                          <span v-if="u.pinPendek" class="badge bg-warning text-dark" title="PIN di bawah 6 angka mudah ditebak. Klik Ubah untuk menggantinya."><i class="fas fa-exclamation-triangle me-1"></i>PIN pendek, sebaiknya diganti</span>
+                          <span v-if="u.pinPendek" class="badge bg-warning" title="PIN di bawah 6 angka mudah ditebak. Klik Ubah untuk menggantinya."><i class="fas fa-exclamation-triangle me-1"></i>PIN pendek, sebaiknya diganti</span>
                           <span v-else class="text-muted">&bull;&bull;&bull;&bull;&bull;&bull;</span>
                         </td>
                         <td class="text-center"><button class="btn btn-sm btn-outline-primary" @click="openUserModal(u)"><i class="fas fa-edit me-1"></i>Ubah</button></td>
@@ -505,10 +1092,10 @@
           </div>
 
           <!-- MODUL LAPORAN (Khusus Admin) -->
-          <div v-if="userRole === 'admin'" v-show="activeTab === 'laporan'" class="h-100" style="min-height: 0;">
-            <div class="card shadow-sm pos-card">
-              <div class="card-header bg-white py-2 flex-shrink-0 d-flex justify-content-between align-items-center no-print">
-                <div class="btn-group btn-group-sm">
+          <div v-if="userRole === 'admin'" v-show="activeTab === 'laporan'" class="h-100 modul" style="min-height: 0;">
+            <div class="card pos-card">
+              <div class="card-header py-2 flex-shrink-0 d-flex justify-content-between align-items-center no-print">
+                <div class="btn-group btn-group-sm segmen">
                   <button class="btn" :class="laporanSubTab === 'ringkasan' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('ringkasan')">
                     <i class="fas fa-chart-line me-1"></i> Ringkasan
                   </button>
@@ -543,7 +1130,7 @@
                    <small class="text-muted">Dicetak pada: {{ formatDate(new Date()) }} &bull; Toko: {{ laporanFilter.cabang ? namaToko(laporanFilter.cabang) : 'Semua toko' }}<span v-if="laporanFilter.dari || laporanFilter.sampai"> &bull; Periode: {{ laporanFilter.dari || 'awal' }} s.d. {{ laporanFilter.sampai || 'sekarang' }}</span></small>
                  </div>
                  
-                 <div class="d-flex flex-wrap align-items-center gap-2 p-2 border-bottom bg-light no-print">
+                 <div class="d-flex flex-wrap align-items-center gap-2 p-2 border-bottom bg-body-tertiary no-print">
                    <select class="form-select form-select-sm w-auto" v-model="laporanFilter.cabang" @change="loadLaporan(laporanSubTab)">
                      <option value="">Semua toko</option>
                      <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">{{ t.nama }}</option>
@@ -577,7 +1164,7 @@
                  <div class="p-3" v-else-if="laporanSubTab === 'ringkasan' && ringkasan" style="font-variant-numeric: tabular-nums;">
                    <div class="row g-2 mb-3">
                      <div class="col-6 col-lg-3" v-for="k in kartuRingkasan" :key="k.label">
-                       <div class="border rounded bg-white p-3 h-100">
+                       <div class="ubin p-3 h-100">
                          <div class="small text-muted">{{ k.label }}</div>
                          <div class="fs-4 fw-semibold text-nowrap" style="font-variant-numeric: normal;">{{ k.nilai }}</div>
                          <div class="small text-muted">{{ k.catatan }}</div>
@@ -678,7 +1265,7 @@
                  <!-- TABEL RIWAYAT TRANSAKSI PENJUALAN -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'transaksi'">
                    <table class="table table-striped table-hover mb-0">
-                     <thead class="table-dark sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">ID Transaksi</th>
                          <th>Waktu</th>
@@ -696,15 +1283,15 @@
                          <td>{{ formatDate(trx.Waktu_Transaksi) }}</td>
                          <td>{{ trx.Kasir }}</td>
                          <td>{{ namaToko(trx.Cabang) }}</td>
-                         <td><span class="badge bg-info text-dark">{{ trx.Metode_Pembayaran }}</span></td>
+                         <td><span class="badge bg-info">{{ trx.Metode_Pembayaran }}</span></td>
                          <td class="text-end">{{ laba(trx) === null ? '-' : 'Rp ' + formatNumber(laba(trx)) }}</td>
                          <td class="text-end pe-3 fw-bold">Rp {{ formatNumber(trx.Total_Belanja) }}</td>
                        </tr>
                        <tr v-if="detailId === trx.ID_Transaksi">
-                         <td colspan="7" class="bg-light px-4 py-3">
+                         <td colspan="7" class="bg-body-tertiary px-4 py-3">
                            <div v-if="loadingDetail" class="text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
                            <div v-else-if="detailItems.length === 0" class="text-muted small">Rincian barang tidak ditemukan.</div>
-                           <table v-else class="table table-sm table-bordered bg-white mb-2">
+                           <table v-else class="table table-sm table-bordered mb-2">
                              <thead>
                                <tr><th>Barang</th><th class="text-end">Harga Jual</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
                              </thead>
@@ -733,7 +1320,7 @@
                  <!-- TABEL RIWAYAT FAKTUR PEMBELIAN (KULAKAN) -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'pembelian'">
                    <table class="table table-striped table-hover mb-0">
-                     <thead class="table-dark sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">ID Pembelian</th>
                          <th>No. Faktur Agen</th>
@@ -760,10 +1347,10 @@
                          <td class="text-end pe-3 fw-bold text-danger">Rp {{ formatNumber(pb.Total_Tagihan) }}</td>
                        </tr>
                        <tr v-if="detailId === pb.ID_Pembelian">
-                         <td colspan="7" class="bg-light px-4 py-3">
+                         <td colspan="7" class="bg-body-tertiary px-4 py-3">
                            <div v-if="loadingDetail" class="text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
                            <div v-else-if="detailItems.length === 0" class="text-muted small">Rincian barang tidak ditemukan.</div>
-                           <table v-else class="table table-sm table-bordered bg-white mb-2">
+                           <table v-else class="table table-sm table-bordered mb-2">
                              <thead>
                                <tr><th>Barang</th><th class="text-end">Harga Beli</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
                              </thead>
@@ -790,7 +1377,7 @@
                  <!-- TABEL TUTUP KASIR (SHIFT) -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'shift'">
                    <table class="table table-striped table-hover mb-0">
-                     <thead class="table-dark sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">Toko</th>
                          <th>Dibuka</th>
@@ -835,7 +1422,7 @@
                  <!-- TABEL KAS MASUK / KELUAR -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'kas'">
                    <table class="table table-striped table-hover mb-0">
-                     <thead class="table-dark sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">Waktu</th>
                          <th>Toko</th>
@@ -868,7 +1455,7 @@
                  <!-- TABEL AUDIT MUTASI STOK -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'mutasi'">
                    <table class="table table-striped table-hover mb-0">
-                     <thead class="table-dark sticky-top">
+                     <thead class="sticky-top">
                        <tr>
                          <th class="ps-3">Waktu</th>
                          <th>Toko</th>
@@ -895,7 +1482,7 @@
                          </td>
                          <td>{{ log.Stok_Awal }} &rarr; <span class="fw-bold">{{ log.Stok_Akhir }}</span></td>
                          <td>{{ log.Keterangan }}</td>
-                         <td><span class="badge bg-light text-dark border">{{ log.User }}</span></td>
+                         <td><span class="badge bg-body-tertiary border">{{ log.User }}</span></td>
                        </tr>
                        <tr v-if="!stockLogs || stockLogs.length === 0">
                          <td colspan="8" class="text-center py-4 text-muted">{{ laporanFilter.cabang || laporanFilter.tipe || laporanFilter.cari || laporanFilter.dari || laporanFilter.sampai ? 'Tidak ada mutasi yang cocok dengan filter.' : 'Belum ada catatan mutasi stok.' }}</td>
@@ -911,12 +1498,13 @@
       </div>
 
       <!-- MODAL TAMBAH / UBAH PENGGUNA -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showUserModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-primary text-white py-3">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
               <h5 class="modal-title fw-bold"><i class="fas fa-user me-2"></i>{{ userForm.id ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h5>
-              <button type="button" class="btn-close btn-close-white" @click="showUserModal = false"></button>
+              <button type="button" class="btn-close" @click="showUserModal = false"></button>
             </div>
             <form @submit.prevent="saveUserSubmit">
               <div class="modal-body p-4">
@@ -941,7 +1529,7 @@
                   <label class="form-check-label" for="userAktif">Aktif (hilangkan centang untuk mencabut akses orang ini)</label>
                 </div>
               </div>
-              <div class="modal-footer bg-light py-2">
+              <div class="modal-footer bg-body-tertiary py-2">
                 <button type="button" class="btn btn-secondary" @click="showUserModal = false">Batal</button>
                 <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingUser">
                   <span v-if="isSavingUser" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -952,23 +1540,25 @@
           </div>
         </div>
       </div>
+      </transition>
 
       <!-- MODAL TAMBAH / EDIT BARANG -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showProductModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-primary text-white py-3">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
               <h5 class="modal-title fw-bold">
                 <i :class="productForm.isEdit ? 'fas fa-edit' : 'fas fa-plus-circle'" class="me-2"></i>
                 {{ productForm.isEdit ? 'Edit Data Barang' : 'Tambah Barang Baru' }}
               </h5>
-              <button type="button" class="btn-close btn-close-white" @click="closeProductModal"></button>
+              <button type="button" class="btn-close" @click="closeProductModal"></button>
             </div>
             <form @submit.prevent="saveProductSubmit">
               <div class="modal-body p-4">
                 <div class="mb-3" v-if="productForm.isEdit">
                   <label class="form-label small fw-bold text-muted">ID Produk</label>
-                  <input type="text" class="form-control bg-light" v-model="productForm.ID_Produk" readonly>
+                  <input type="text" class="form-control" v-model="productForm.ID_Produk" readonly>
                 </div>
                 
                 <div class="mb-3">
@@ -1013,7 +1603,7 @@
                   </div>
                 </div>
               </div>
-              <div class="modal-footer bg-light py-2">
+              <div class="modal-footer bg-body-tertiary py-2">
                 <button type="button" class="btn btn-secondary" @click="closeProductModal">Batal</button>
                 <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingProduct">
                   <span v-if="isSavingProduct" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -1024,21 +1614,23 @@
           </div>
         </div>
       </div>
+      </transition>
 
       <!-- MODAL RESTOCK / TAMBAH STOK MASUK -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showRestockModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-success text-white py-3">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
               <h5 class="modal-title fw-bold">
                 <i class="fas fa-boxes me-2"></i> Tambah Stok Masuk (Restock)
               </h5>
-              <button type="button" class="btn-close btn-close-white" @click="closeRestockModal"></button>
+              <button type="button" class="btn-close" @click="closeRestockModal"></button>
             </div>
             <form @submit.prevent="submitRestock">
               <div class="modal-body p-4">
                 <div class="alert alert-light border mb-3">
-                  <div class="fw-bold text-dark fs-5">{{ restockForm.nama_produk }}</div>
+                  <div class="fw-bold fs-5">{{ restockForm.nama_produk }}</div>
                   <div class="text-muted small">ID: {{ restockForm.id_produk }} &bull; Toko: <strong>{{ toko.nama }}</strong> &bull; Stok saat ini: <strong class="text-primary">{{ restockForm.stok_sekarang }}</strong> unit</div>
                 </div>
 
@@ -1053,7 +1645,7 @@
                   <input type="text" class="form-control" v-model="restockForm.keterangan" placeholder="Contoh: Kulakan Agen Jaya / Barang Masuk Baru">
                 </div>
               </div>
-              <div class="modal-footer bg-light py-2">
+              <div class="modal-footer bg-body-tertiary py-2">
                 <button type="button" class="btn btn-secondary" @click="closeRestockModal">Batal</button>
                 <button type="submit" class="btn btn-success fw-bold px-4" :disabled="isSavingRestock">
                   <span v-if="isSavingRestock" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -1064,21 +1656,23 @@
           </div>
         </div>
       </div>
+      </transition>
 
       <!-- MODAL TRANSFER STOK ANTAR TOKO -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showTransferModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-secondary text-white py-3">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
               <h5 class="modal-title fw-bold">
                 <i class="fas fa-exchange-alt me-2"></i> Transfer Stok Antar Toko
               </h5>
-              <button type="button" class="btn-close btn-close-white" @click="showTransferModal = false"></button>
+              <button type="button" class="btn-close" @click="showTransferModal = false"></button>
             </div>
             <form @submit.prevent="submitTransfer">
               <div class="modal-body p-4">
                 <div class="alert alert-light border mb-3">
-                  <div class="fw-bold text-dark fs-5">{{ transferForm.nama_produk }}</div>
+                  <div class="fw-bold fs-5">{{ transferForm.nama_produk }}</div>
                   <div class="text-muted small">ID: {{ transferForm.id_produk }} &bull; Dari: <strong>{{ toko.nama }}</strong> &bull; Stok: <strong class="text-primary">{{ transferForm.stok[toko.kode] }}</strong> unit</div>
                 </div>
 
@@ -1101,7 +1695,7 @@
                   <input type="text" class="form-control" v-model="transferForm.keterangan" placeholder="Contoh: Stok cabang menipis / dibawa Pak Made">
                 </div>
               </div>
-              <div class="modal-footer bg-light py-2">
+              <div class="modal-footer bg-body-tertiary py-2">
                 <button type="button" class="btn btn-secondary" @click="showTransferModal = false">Batal</button>
                 <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="isSavingTransfer">
                   <span v-if="isSavingTransfer" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -1112,16 +1706,18 @@
           </div>
         </div>
       </div>
+      </transition>
 
       <!-- MODAL FAKTUR PEMBELIAN (KULAKAN MASSAL) -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showPurchaseModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-dark text-white py-3">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
               <h5 class="modal-title fw-bold">
                 <i class="fas fa-file-invoice-dollar text-success me-2"></i> Input Faktur Pembelian (Kulakan) &mdash; {{ toko.nama }}
               </h5>
-              <button type="button" class="btn-close btn-close-white" @click="closePurchaseModal"></button>
+              <button type="button" class="btn-close" @click="closePurchaseModal"></button>
             </div>
             <form @submit.prevent="submitPurchaseInvoice">
               <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
@@ -1153,7 +1749,7 @@
                 </div>
 
                 <!-- Input Pilih Produk ke Faktur -->
-                <div class="card bg-light border-0 p-3 mb-3">
+                <div class="card bg-body-tertiary border-0 p-3 mb-3">
                   <label class="form-label small fw-bold text-primary mb-1"><i class="fas fa-plus-circle me-1"></i> Tambah Barang yang Dibeli ke Nota</label>
                   <div class="input-group">
                     <select class="form-select" v-model="purchaseForm.selectedProductId">
@@ -1219,7 +1815,7 @@
                 </div>
 
               </div>
-              <div class="modal-footer bg-light py-2">
+              <div class="modal-footer bg-body-tertiary py-2">
                 <button type="button" class="btn btn-secondary" @click="closePurchaseModal">Batal</button>
                 <button type="submit" class="btn btn-success fw-bold px-4" :disabled="isSavingPurchase || purchaseForm.items.length === 0">
                   <span v-if="isSavingPurchase" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -1230,18 +1826,20 @@
           </div>
         </div>
       </div>
+      </transition>
 
       <!-- MODAL STRUK BELANJA (THERMAL RECEIPT PREVIEW & PRINT) -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showReceiptModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.6); z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-          <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header bg-dark text-white py-2 no-print">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 no-print">
               <h6 class="modal-title fw-bold"><i class="fas fa-receipt me-2 text-success"></i> Struk Transaksi Kasir</h6>
-              <button type="button" class="btn-close btn-close-white" @click="closeReceiptModal"></button>
+              <button type="button" class="btn-close" @click="closeReceiptModal"></button>
             </div>
-            <div class="modal-body p-3 bg-light">
+            <div class="modal-body p-3 bg-body-tertiary">
               <!-- Thermal Receipt Box -->
-              <div class="receipt-box receipt-print-area mx-auto">
+              <div class="receipt-box receipt-print-area mx-auto" data-bs-theme="light">
                 <div class="text-center mb-2">
                   <h5 class="fw-bold mb-0" style="font-size: 16px; letter-spacing: 1px;">TOKO SUKAHATI</h5>
                   <div style="font-size: 11px;" class="text-muted">{{ lastTransaction?.nama_toko }}</div>
@@ -1275,7 +1873,7 @@
                         <div class="fw-bold text-truncate" style="max-width: 280px;">{{ it.nama }}</div>
                         <div class="d-flex justify-content-between text-muted">
                           <span>{{ it.qty }} x {{ formatNumber(it.harga_jual) }}</span>
-                          <span class="text-dark fw-bold">Rp {{ formatNumber(it.subtotal) }}</span>
+                          <span class="text-body fw-bold">Rp {{ formatNumber(it.subtotal) }}</span>
                         </div>
                       </td>
                     </tr>
@@ -1311,7 +1909,7 @@
                 </div>
               </div>
             </div>
-            <div class="modal-footer bg-white py-2 no-print d-flex justify-content-between">
+            <div class="modal-footer py-2 no-print d-flex justify-content-between">
               <button type="button" class="btn btn-outline-secondary btn-sm" @click="closeReceiptModal">
                 <i class="fas fa-arrow-left me-1"></i> Transaksi Baru
               </button>
@@ -1322,6 +1920,7 @@
           </div>
         </div>
       </div>
+      </transition>
 
     </div>
 
@@ -1332,6 +1931,28 @@
     
     <script>
   const { createApp } = Vue;
+
+  // Tema: gelap bawaan, pilihan tersimpan di perangkat ini. Saat mencetak selalu memakai tema terang.
+  const KUNCI_TEMA = 'kasir-tema';
+  function bacaTema() {
+    try {
+      return localStorage.getItem(KUNCI_TEMA) === 'light' ? 'light' : 'dark';
+    } catch (err) {
+      return 'dark';
+    }
+  }
+  function terapkanTema(tema) {
+    document.documentElement.setAttribute('data-bs-theme', tema);
+  }
+  terapkanTema(bacaTema());
+  let temaSebelumCetak = null;
+  window.addEventListener('beforeprint', () => {
+    temaSebelumCetak = document.documentElement.getAttribute('data-bs-theme');
+    terapkanTema('light');
+  });
+  window.addEventListener('afterprint', () => {
+    if (temaSebelumCetak) terapkanTema(temaSebelumCetak);
+  });
 
   // Panggil fungsi server (Code.js) sebagai Promise. Error dari server masuk ke catch.
   // Di dalam Apps Script lewat google.script.run; di GitHub Pages lewat API doPost (window.API_URL).
@@ -1363,6 +1984,7 @@
       return {
         // Auth State
         isLoggedIn: false,
+        tema: bacaTema(),
         isLoggingIn: false,
         userRole: '', // 'kasir' atau 'admin'
         token: '', // token sesi dari login; dikirim ke server di setiap panggilan (PIN tidak disimpan)
@@ -1609,6 +2231,24 @@
       },
       sukses(judul, pesan) {
         Swal.fire({ title: judul, text: pesan, icon: 'success', timer: 1500, showConfirmButton: false });
+      },
+
+      gantiTema() {
+        const baru = this.tema === 'dark' ? 'light' : 'dark';
+        const ganti = () => {
+          this.tema = baru;
+          terapkanTema(baru);
+          try { localStorage.setItem(KUNCI_TEMA, baru); } catch (err) {}
+        };
+        // Transisi silang halus bila browser mendukung View Transitions
+        if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          // Transisi bisa dibatalkan browser (mis. tab tidak terlihat); tema tetap berganti
+          const vt = document.startViewTransition(ganti);
+          vt.ready.catch(() => {});
+          vt.finished.catch(() => {});
+        } else {
+          ganti();
+        }
       },
 
       // -- AUTH --
