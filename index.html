@@ -376,6 +376,31 @@
     transform: translateY(-2px);
   }
 
+  /* Petunjuk pintasan keyboard di tombol; disembunyikan di layar sentuh */
+  kbd.pintasan {
+    font-family: inherit;
+    font-size: 0.68em;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 0.12em 0.42em;
+    margin-left: 0.4em;
+    border-radius: 5px;
+    border: 1px solid var(--garis);
+    background: var(--isian);
+    color: var(--teks-2);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .btn-primary kbd.pintasan,
+  .btn-success kbd.pintasan {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: transparent;
+    color: #fff;
+  }
+  @media (pointer: coarse) {
+    kbd.pintasan, .tombol-pintasan { display: none; }
+  }
+
   /* Baris keranjang ringkas */
   .baris-keranjang { font-size: 0.86rem; padding-top: 0.38rem !important; padding-bottom: 0.38rem !important; }
   .kecil { font-size: 0.76rem; }
@@ -940,7 +965,7 @@
               <div class="col-md-6 col-lg-3 d-flex flex-column h-100" style="min-height: 0;">
                 <div class="card pos-card">
                   <div class="card-header border-bottom-0 pt-3 flex-shrink-0">
-                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang, lalu Enter" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang" v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch">
+                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang (F2)" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang. Panah bawah atau Tab: pilih dari daftar." v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch" @keydown.down.prevent="fokusKartu(0)" @keydown.up.prevent="fokusBarisKeranjang(0)">
                   </div>
                   <div class="card-body p-2 product-grid">
                     <div v-if="loading" class="text-center py-5">
@@ -949,11 +974,11 @@
                     
                     <div class="row g-2" v-else>
                       <div class="col-6" v-for="(product, i) in filteredProducts" :key="product.ID_Produk" :style="{ '--i': Math.min(i, 24) }">
-                        <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" tabindex="0" role="button" :aria-label="'Masukkan ' + product.Nama_Produk + ' ke keranjang'" @click="addToCart(product)" @keydown.enter.prevent="addToCart(product)" @keydown.space.prevent="addToCart(product)">
+                        <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" tabindex="0" role="button" :aria-label="'Masukkan ' + product.Nama_Produk + ' ke keranjang'" @click="addToCart(product)" @keydown.enter.prevent="addToCart(product)" @keydown.space.prevent="addToCart(product)" @keydown="navKartu($event, i)">
                           <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                             <h6 class="card-title text-truncate" :title="product.Nama_Produk" style="font-size: 0.85rem;">{{ product.Nama_Produk }}</h6>
                             <p class="card-text text-primary fw-bold mb-1" style="font-size: 0.9rem;">Rp {{ formatNumber(product.Harga_Jual) }}</p>
-                            <small :class="menipis(product) ? 'text-danger fw-semibold' : 'text-muted'" style="font-size: 0.72rem;">Stok {{ product.Stok_Tersedia }}</small>
+                            <small :class="menipis(product) ? 'text-danger fw-semibold' : 'text-muted'" style="font-size: 0.72rem;">Stok {{ uraiStok(product, product.Stok_Tersedia) }}</small>
                             <small v-if="product.Satuan_Lain && product.Satuan_Lain.length" class="text-muted text-truncate" style="font-size: 0.68rem;">+ {{ product.Satuan_Lain.map(s => s.nama).join(', ') }}</small>
                           </div>
                         </div>
@@ -969,8 +994,9 @@
                   <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 py-2">
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
                     <div class="d-flex align-items-center gap-2">
-                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan"><i class="fas fa-money-bill-wave me-1"></i>Kas</button>
-                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir"><i class="fas fa-lock me-1"></i>Tutup Kasir</button>
+                      <button class="btn btn-sm btn-outline-secondary py-0 tombol-pintasan" @click="bantuanPintasan" title="Daftar pintasan keyboard (F1)"><i class="fas fa-keyboard"></i><kbd class="pintasan">F1</kbd></button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan (F6)"><i class="fas fa-money-bill-wave me-1"></i>Kas<kbd class="pintasan">F6</kbd></button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir (F10)"><i class="fas fa-lock me-1"></i>Tutup Kasir<kbd class="pintasan">F10</kbd></button>
                       <span class="badge bg-danger rounded-pill">{{ cart.length }} item</span>
                     </div>
                   </div>
@@ -998,7 +1024,7 @@
                             </div>
                             <div class="input-group input-group-sm flex-shrink-0 stepper-qty">
                               <button class="btn btn-outline-secondary px-2" @click="updateQty(index, -1)">-</button>
-                              <input type="number" class="form-control text-center px-1" :data-baris="kunciBaris(item)" v-model.number="item.qty" @change="validateCartQty(item)" @keydown.enter.prevent="kembaliKeCari" min="1">
+                              <input type="number" class="form-control text-center px-1" :data-baris="kunciBaris(item)" v-model.number="item.qty" @input="item.subtotal = (Number(item.qty) || 0) * item.harga_jual" @change="validateCartQty(item)" @keydown.enter.prevent="kembaliKeCari" @keydown="tombolBaris($event, item, index)" min="1">
                               <button class="btn btn-outline-secondary px-2" @click="updateQty(index, 1)">+</button>
                             </div>
                             <div class="text-end fw-bold flex-shrink-0 tabular" style="min-width: 84px;">Rp {{ formatNumber(item.subtotal) }}</div>
@@ -1010,7 +1036,7 @@
 
                     <div class="cart-footer-fixed panel-bayar">
                       <div class="d-flex flex-lg-column align-items-center align-items-lg-stretch gap-2">
-                        <input type="text" class="form-control form-control-sm" v-model="namaPelanggan" maxlength="60" placeholder="Nama pelanggan (opsional)" aria-label="Nama pelanggan">
+                        <input type="text" class="form-control form-control-sm" v-model="namaPelanggan" ref="pelanggan" maxlength="60" placeholder="Nama pelanggan (F3)" aria-label="Nama pelanggan" @keydown.enter.prevent="kembaliKeCari">
                         <div class="text-end text-lg-start flex-shrink-0 order-lg-first">
                           <div class="text-muted kecil lh-1">Total</div>
                           <div class="fs-4 fw-bold text-primary lh-sm total-besar">Rp {{ formatNumber(totalBelanja) }}</div>
@@ -1018,15 +1044,15 @@
                       </div>
 
                       <div class="d-flex flex-lg-column gap-2">
-                        <select class="form-select form-select-sm metode-bayar" v-model="metodePembayaran" aria-label="Metode bayar">
+                        <select class="form-select form-select-sm metode-bayar" v-model="metodePembayaran" aria-label="Metode bayar" title="Metode bayar (F4 untuk mengganti)">
                           <option value="Tunai">Tunai</option>
                           <option value="Transfer">Transfer</option>
                           <option value="QRIS">QRIS</option>
                         </select>
-                        <input v-if="metodePembayaran === 'Tunai'" type="number" class="form-control form-control-sm fw-bold" v-model.number="jumlahBayar" placeholder="Uang diterima" aria-label="Uang diterima">
+                        <input v-if="metodePembayaran === 'Tunai'" type="number" class="form-control form-control-sm fw-bold" v-model.number="jumlahBayar" ref="uang" placeholder="Uang diterima (F7)" aria-label="Uang diterima" @keydown.enter.prevent="kembaliKeCari">
                       </div>
                       <div v-if="metodePembayaran === 'Tunai'" class="d-flex flex-wrap align-items-center gap-1">
-                        <button type="button" class="btn-quick-cash" @click="setQuickCash('pas')">Pas</button>
+                        <button type="button" class="btn-quick-cash" @click="setQuickCash('pas')">Pas<kbd class="pintasan">F8</kbd></button>
                         <button type="button" class="btn-quick-cash" @click="setQuickCash(10000)">10rb</button>
                         <button type="button" class="btn-quick-cash" @click="setQuickCash(20000)">20rb</button>
                         <button type="button" class="btn-quick-cash" @click="setQuickCash(50000)">50rb</button>
@@ -1041,11 +1067,11 @@
                       <div class="flex-grow-1"></div>
 
                       <button v-if="shiftDimuat && !shift" class="btn btn-primary btn-lg w-100 fw-bold py-2" @click="bukaKasir">
-                        <i class="fas fa-lock-open me-2"></i>BUKA KASIR
+                        <i class="fas fa-lock-open me-2"></i>BUKA KASIR<kbd class="pintasan">F9</kbd>
                       </button>
                       <button v-else class="btn btn-success btn-lg w-100 fw-bold py-2" :disabled="!canCheckout || isProcessing" @click="checkout">
                         <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {{ isProcessing ? 'MEMPROSES...' : 'BAYAR SEKARANG' }}
+                        {{ isProcessing ? 'MEMPROSES...' : 'BAYAR SEKARANG' }}<kbd v-if="!isProcessing" class="pintasan">F9</kbd>
                       </button>
                     </div>
                   </div>
@@ -1103,7 +1129,7 @@
                          <td class="text-primary fw-bold text-nowrap">Rp {{ formatNumber(product.Harga_Jual) }}</td>
                          <td class="text-center" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}">
                             <span class="badge rounded-pill" :class="product.Stok[t.kode] > product.Stok_Minimum ? 'bg-success' : 'bg-danger'" :title="'Stok minimum: ' + product.Stok_Minimum">
-                               {{ product.Stok[t.kode] }}
+                               {{ uraiStok(product, product.Stok[t.kode]) }}
                             </span>
                          </td>
                          <td class="text-center text-nowrap">
@@ -1326,7 +1352,7 @@
                            <tr v-for="s in stokMenipis" :key="s.id">
                              <td>{{ s.nama }} <span class="text-muted small">({{ s.id }})</span></td>
                              <td>{{ s.kategori }}</td>
-                             <td class="text-end fw-bold">{{ s.stok }}</td>
+                             <td class="text-end fw-bold">{{ s.uraian }}</td>
                              <td class="text-end">{{ s.minimum }}</td>
                            </tr>
                            <tr v-if="stokMenipis.length === 0"><td colspan="4" class="text-center text-muted py-3">Tidak ada barang yang menipis di toko ini.</td></tr>
@@ -1373,7 +1399,7 @@
                                <tr v-for="it in detailItems" :key="it.id_produk">
                                  <td>{{ it.nama }} <span class="text-muted small">({{ it.id_produk }})</span></td>
                                  <td class="text-end">Rp {{ formatNumber(it.harga) }}</td>
-                                 <td class="text-center">{{ it.qty }}{{ it.isi > 1 ? ' ' + it.satuan : '' }}</td>
+                                 <td class="text-center">{{ it.qty }}{{ it.satuan ? ' ' + it.satuan : '' }}</td>
                                  <td class="text-end fw-bold">Rp {{ formatNumber(it.subtotal) }}</td>
                                </tr>
                              </tbody>
@@ -1432,7 +1458,7 @@
                                <tr v-for="it in detailItems" :key="it.id_produk">
                                  <td>{{ it.nama }} <span class="text-muted small">({{ it.id_produk }})</span></td>
                                  <td class="text-end">Rp {{ formatNumber(it.harga) }}</td>
-                                 <td class="text-center">{{ it.qty }}{{ it.isi > 1 ? ' ' + it.satuan : '' }}</td>
+                                 <td class="text-center">{{ it.qty }}{{ it.satuan ? ' ' + it.satuan : '' }}</td>
                                  <td class="text-end fw-bold">Rp {{ formatNumber(it.subtotal) }}</td>
                                </tr>
                              </tbody>
@@ -1697,7 +1723,7 @@
                       </div>
                       <div class="col-3">
                         <label class="form-label small mb-0">Isi ({{ productForm.Satuan_Dasar || 'pcs' }})</label>
-                        <input type="number" class="form-control form-control-sm" v-model.number="s.isi" min="2" step="1" required>
+                        <input type="number" class="form-control form-control-sm" v-model.number="s.isi" min="1" step="1" required>
                       </div>
                       <div class="col-4">
                         <label class="form-label small mb-0">Harga jual / {{ s.nama || 'satuan' }}</label>
@@ -1762,7 +1788,7 @@
               <div class="modal-body p-4">
                 <div class="alert alert-light border mb-3">
                   <div class="fw-bold fs-5">{{ restockForm.nama_produk }}</div>
-                  <div class="text-muted small">ID: {{ restockForm.id_produk }} &bull; Toko: <strong>{{ toko.nama }}</strong> &bull; Stok saat ini: <strong class="text-primary">{{ restockForm.stok_sekarang }}</strong> {{ restockForm.dasar }}</div>
+                  <div class="text-muted small">ID: {{ restockForm.id_produk }} &bull; Toko: <strong>{{ toko.nama }}</strong> &bull; Stok saat ini: <strong class="text-primary">{{ uraiStok(restockForm.produk, restockForm.stok_sekarang, true) }}</strong></div>
                 </div>
 
                 <div class="row g-2 mb-1">
@@ -1777,7 +1803,7 @@
                     </select>
                   </div>
                 </div>
-                <div class="form-text mb-3">Masuk <strong>{{ restockPcs }}</strong> {{ restockForm.dasar }} &bull; stok akhir: <strong>{{ Number(restockForm.stok_sekarang) + restockPcs }}</strong> {{ restockForm.dasar }}</div>
+                <div class="form-text mb-3">Masuk <strong>{{ restockPcs }}</strong> {{ restockForm.dasar }} &bull; stok akhir: <strong>{{ uraiStok(restockForm.produk, Number(restockForm.stok_sekarang) + restockPcs, true) }}</strong></div>
 
                 <div class="mb-2">
                   <label class="form-label small fw-bold">Keterangan / Sumber Barang</label>
@@ -1812,21 +1838,21 @@
               <div class="modal-body p-4">
                 <div class="alert alert-light border mb-3">
                   <div class="fw-bold fs-5">{{ transferForm.nama_produk }}</div>
-                  <div class="text-muted small">ID: {{ transferForm.id_produk }} &bull; Dari: <strong>{{ toko.nama }}</strong> &bull; Stok: <strong class="text-primary">{{ transferForm.stok[toko.kode] }}</strong> unit</div>
+                  <div class="text-muted small">ID: {{ transferForm.id_produk }} &bull; Dari: <strong>{{ toko.nama }}</strong> &bull; Stok: <strong class="text-primary">{{ uraiStok(transferForm.produk, transferForm.stok[toko.kode], true) }}</strong></div>
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label small fw-bold">Toko Tujuan <span class="text-danger">*</span></label>
                   <select class="form-select" v-model="transferForm.ke" required>
                     <option value="" disabled>-- Pilih toko tujuan --</option>
-                    <option v-for="t in daftarToko.filter(t => t.kode !== toko.kode)" :key="t.kode" :value="t.kode">{{ t.nama }} (stok sekarang: {{ transferForm.stok[t.kode] }})</option>
+                    <option v-for="t in daftarToko.filter(t => t.kode !== toko.kode)" :key="t.kode" :value="t.kode">{{ t.nama }} (stok sekarang: {{ uraiStok(transferForm.produk, transferForm.stok[t.kode], true) }})</option>
                   </select>
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label small fw-bold">Jumlah Dipindahkan <span class="text-danger">*</span></label>
                   <input type="number" class="form-control form-control-lg fw-bold" v-model.number="transferForm.qty" min="1" :max="transferForm.stok[toko.kode]" step="1" required>
-                  <div class="form-text">Sisa di {{ toko.nama }} setelah transfer: <strong>{{ transferForm.stok[toko.kode] - (Number(transferForm.qty) || 0) }}</strong> unit</div>
+                  <div class="form-text">Sisa di {{ toko.nama }} setelah transfer: <strong>{{ uraiStok(transferForm.produk, transferForm.stok[toko.kode] - (Number(transferForm.qty) || 0), true) }}</strong>. Jumlah diisi dalam {{ transferForm.produk.Satuan_Dasar || 'pcs' }}.</div>
                 </div>
 
                 <div class="mb-2">
@@ -1894,7 +1920,7 @@
                     <select class="form-select" v-model="purchaseForm.selectedProductId">
                       <option value="" disabled>-- Pilih barang dari database --</option>
                       <option v-for="p in products" :key="p.ID_Produk" :value="p.ID_Produk">
-                        {{ p.Nama_Produk }} (Stok {{ toko.nama }}: {{ p.Stok_Tersedia }})
+                        {{ p.Nama_Produk }} (Stok {{ toko.nama }}: {{ uraiStok(p, p.Stok_Tersedia, true) }})
                       </option>
                     </select>
                     <button type="button" class="btn btn-primary fw-bold" :disabled="!purchaseForm.selectedProductId" @click="addPurchaseItem">
@@ -2018,7 +2044,7 @@
                       <td colspan="2">
                         <div class="fw-bold text-truncate" style="max-width: 280px;">{{ it.nama }}</div>
                         <div class="d-flex justify-content-between text-muted">
-                          <span>{{ it.qty }}{{ it.isi > 1 ? ' ' + it.satuan : '' }} x {{ formatNumber(it.harga_jual) }}</span>
+                          <span>{{ it.qty }}{{ it.satuan ? ' ' + it.satuan : '' }} x {{ formatNumber(it.harga_jual) }}</span>
                           <span class="text-body fw-bold">Rp {{ formatNumber(it.subtotal) }}</span>
                         </div>
                       </td>
@@ -2057,10 +2083,10 @@
             </div>
             <div class="modal-footer py-2 no-print d-flex justify-content-between">
               <button type="button" class="btn btn-outline-secondary btn-sm" @click="closeReceiptModal">
-                <i class="fas fa-arrow-left me-1"></i> Transaksi Baru
+                <i class="fas fa-arrow-left me-1"></i> Transaksi Baru<kbd class="pintasan">Enter</kbd>
               </button>
               <button type="button" class="btn btn-primary btn-sm fw-bold px-3" @click="printReceipt">
-                <i class="fas fa-print me-1"></i> Cetak Struk
+                <i class="fas fa-print me-1"></i> Cetak Struk<kbd class="pintasan">P</kbd>
               </button>
             </div>
           </div>
@@ -2123,6 +2149,17 @@
     }
     if (!jawaban.ok) throw new Error(jawaban.error);
     return jawaban.result;
+  }
+
+  // Dialog Swal yang berisi form sendiri: fokus ke isian pertama, dan Enter di isian = tombol konfirmasi
+  function siapkanDialog(idFokus) {
+    document.getElementById(idFokus).focus();
+    Swal.getPopup().addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        e.preventDefault();
+        Swal.clickConfirm();
+      }
+    });
   }
 
   createApp({
@@ -2234,6 +2271,9 @@
         }
       }
     },
+    mounted() {
+      window.addEventListener('keydown', this.pintasan);
+    },
     computed: {
       filteredProducts() {
         return this.cariProduk(this.products, this.searchQuery);
@@ -2319,7 +2359,7 @@
         this.products.forEach(p => this.tokoLaporan.forEach(t => {
           const stok = p.Stok ? p.Stok[t.kode] : 0;
           if (p.Stok_Minimum > 0 && stok <= p.Stok_Minimum) {
-            list.push({ kode: t.kode, id: p.ID_Produk, nama: p.Nama_Produk, kategori: p.Kategori, stok: stok, minimum: p.Stok_Minimum });
+            list.push({ kode: t.kode, id: p.ID_Produk, nama: p.Nama_Produk, kategori: p.Kategori, stok: stok, uraian: this.uraiStok(p, stok, true), minimum: p.Stok_Minimum });
           }
         }));
         return list.sort((a, b) => a.stok - b.stok || a.nama.localeCompare(b.nama));
@@ -2652,7 +2692,7 @@
                  <label class="form-label small fw-bold" for="kasKet">Keterangan</label>
                  <input id="kasKet" type="text" class="form-control" placeholder="Wajib diisi, mis. setor ke Pak Made">`,
           focusConfirm: false,
-          didOpen: () => document.getElementById('kasJumlah').focus(),
+          didOpen: () => siapkanDialog('kasJumlah'),
           preConfirm: () => {
             const jumlah = Number(document.getElementById('kasJumlah').value);
             const keterangan = document.getElementById('kasKet').value.trim();
@@ -2689,7 +2729,7 @@
                  <input id="kasFisik" type="number" min="0" step="1" class="form-control form-control-lg text-center mb-3">
                  <input id="catatanShift" type="text" class="form-control" placeholder="Catatan (opsional)">`,
           focusConfirm: false,
-          didOpen: () => document.getElementById('kasFisik').focus(),
+          didOpen: () => siapkanDialog('kasFisik'),
           preConfirm: () => {
             const kas = document.getElementById('kasFisik').value;
             if (kas === '' || Number(kas) < 0) {
@@ -2733,7 +2773,7 @@
       // -- SATUAN JUAL --
       // Semua satuan jual barang: satuan dasar (isi 1, harga jual biasa) lalu satuan lain (mis. Slop isi 10)
       satuanBarang(product) {
-        return [{ nama: product.Satuan_Dasar || 'pcs', isi: 1, harga: product.Harga_Jual }].concat(product.Satuan_Lain || []);
+        return [{ nama: product.Satuan_Dasar || 'pcs', isi: 1, harga: product.Harga_Jual, dasar: true }].concat(product.Satuan_Lain || []);
       },
       pilihanSatuan(item) {
         const product = this.products.find(p => p.ID_Produk === item.id_produk);
@@ -2768,6 +2808,169 @@
       },
       hapusSatuan(index) {
         this.productForm.Satuan_Lain.splice(index, 1);
+      },
+
+      // Stok diurai per satuan besar: 35 bungkus dengan Slop isi 10 -> "3 Slop + 5 bungkus".
+      // Hanya tampilan; stok tetap tersimpan sebagai satu angka dalam satuan dasar.
+      // Barang tanpa satuan besar: angkanya saja (dengan nama satuan bila denganSatuan = true).
+      uraiStok(product, jumlah, denganSatuan) {
+        const dasar = product.Satuan_Dasar || 'pcs';
+        const besar = (product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
+        let sisa = Number(jumlah) || 0;
+        if (besar.length === 0 || sisa <= 0) return denganSatuan ? sisa + ' ' + dasar : String(sisa);
+        const bagian = [];
+        besar.forEach(s => {
+          const n = Math.floor(sisa / s.isi);
+          if (n > 0) {
+            bagian.push(n + ' ' + s.nama);
+            sisa -= n * s.isi;
+          }
+        });
+        if (sisa > 0) bagian.push(sisa + ' ' + dasar);
+        return bagian.join(' + ');
+      },
+
+      // -- PINTASAN KEYBOARD (layar kasir; daftar lengkap di bantuanPintasan) --
+      pintasan(e) {
+        if (!this.isLoggedIn || this.activeTab !== 'kasir' || e.ctrlKey || e.altKey || e.metaKey) return;
+        // Struk sedang tampil: Enter/Esc = transaksi baru, P = cetak
+        if (this.showReceiptModal) {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            this.closeReceiptModal();
+            this.kembaliKeCari();
+          } else if (e.key.toLowerCase() === 'p') {
+            e.preventDefault();
+            this.printReceipt();
+          }
+          return;
+        }
+        if (Swal.isVisible() || document.querySelector('.modal') || e.shiftKey) return;
+
+        const aksi = {
+          F1: () => this.bantuanPintasan(),
+          F2: () => this.kembaliKeCari(),
+          F3: () => this.fokusRef('pelanggan'),
+          F4: () => this.gantiMetode(),
+          F6: () => this.shift && this.catatKas(),
+          F7: () => {
+            this.metodePembayaran = 'Tunai';
+            this.$nextTick(() => this.fokusRef('uang'));
+          },
+          F8: () => {
+            this.rapikanKeranjang();
+            this.metodePembayaran = 'Tunai';
+            this.setQuickCash('pas');
+          },
+          F9: () => {
+            if (this.shiftDimuat && !this.shift) return this.bukaKasir();
+            this.rapikanKeranjang();
+            if (this.canCheckout && !this.isProcessing) this.checkout();
+          },
+          F10: () => this.shift && this.tutupKasir(),
+          Escape: () => this.kembaliKeCari()
+        }[e.key];
+        if (aksi) {
+          e.preventDefault();
+          aksi();
+        }
+      },
+      bantuanPintasan() {
+        const daftar = [
+          ['F2', 'Ke kotak cari barang'],
+          ['↓ atau Tab', 'Dari kotak cari: sorot barang pertama. Panah untuk pindah, Enter untuk memasukkan'],
+          ['↑', 'Dari kotak cari: ke kolom jumlah barang teratas di keranjang'],
+          ['Enter', 'Di kolom jumlah: selesai, kembali ke kotak cari'],
+          ['↑ ↓', 'Di kolom jumlah: pindah ke barang lain di keranjang'],
+          ['+ −', 'Di kolom jumlah: tambah / kurangi satu'],
+          ['S', 'Di kolom jumlah: ganti satuan (mis. bungkus ke slop)'],
+          ['Shift + Del', 'Di kolom jumlah: hapus barang dari keranjang'],
+          ['F3', 'Nama pelanggan'],
+          ['F4', 'Ganti metode bayar (Tunai, Transfer, QRIS)'],
+          ['F7', 'Isi uang diterima'],
+          ['F8', 'Uang pas'],
+          ['F9', 'Bayar (atau Buka Kasir bila belum dibuka)'],
+          ['Enter / P', 'Saat struk tampil: transaksi baru / cetak struk'],
+          ['F6', 'Kas masuk/keluar'],
+          ['F10', 'Tutup kasir'],
+          ['Esc', 'Kembali ke kotak cari / tutup dialog'],
+          ['F1', 'Tampilkan daftar ini']
+        ];
+        Swal.fire({
+          title: 'Pintasan Keyboard',
+          width: 580,
+          html: '<table class="table table-sm text-start mb-0"><tbody>' +
+            daftar.map(([tombol, guna]) => `<tr><td class="text-nowrap"><kbd class="pintasan ms-0">${tombol}</kbd></td><td>${guna}</td></tr>`).join('') +
+            '</tbody></table>',
+          confirmButtonText: 'Tutup'
+        });
+      },
+      fokusRef(nama) {
+        const el = this.$refs[nama];
+        if (el) {
+          el.focus();
+          el.select();
+        }
+      },
+      gantiMetode() {
+        const metode = ['Tunai', 'Transfer', 'QRIS'];
+        this.metodePembayaran = metode[(metode.indexOf(this.metodePembayaran) + 1) % metode.length];
+      },
+      // Jumlah yang baru diketik divalidasi dulu (biasanya terjadi saat kolom ditinggalkan)
+      rapikanKeranjang() {
+        [...this.cart].forEach(item => this.validateCartQty(item));
+      },
+      fokusKartu(i) {
+        const kartu = document.querySelectorAll('.product-card')[i];
+        if (kartu) kartu.focus();
+        return !!kartu;
+      },
+      fokusBarisKeranjang(i) {
+        const el = document.querySelectorAll('.baris-keranjang [data-baris]')[i];
+        if (el) {
+          el.focus();
+          el.select();
+        }
+        return !!el;
+      },
+      // Panah di kartu barang: pindah antar kartu; panah atas dari baris pertama kembali ke kotak cari
+      navKartu(e, i) {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.key) === -1) return;
+        e.preventDefault();
+        const kartu = [...document.querySelectorAll('.product-card')];
+        const atas = kartu[0].getBoundingClientRect().top;
+        const kolom = kartu.filter(k => Math.abs(k.getBoundingClientRect().top - atas) < 2).length || 1;
+        const tujuan = i + { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -kolom, ArrowDown: kolom }[e.key];
+        if (tujuan < 0) this.kembaliKeCari();
+        else this.fokusKartu(tujuan);
+      },
+      // Tombol di kolom jumlah sebuah baris keranjang
+      tombolBaris(e, item, index) {
+        const tombol = e.key;
+        if (tombol === 'ArrowUp' || tombol === 'ArrowDown') {
+          e.preventDefault();
+          this.validateCartQty(item);
+          const tujuan = index + (tombol === 'ArrowUp' ? -1 : 1);
+          if (tujuan < 0) this.kembaliKeCari();
+          else this.fokusBarisKeranjang(tujuan);
+        } else if (tombol === '+' || tombol === '=') {
+          e.preventDefault();
+          this.updateQty(index, 1);
+        } else if (tombol === '-') {
+          e.preventDefault();
+          this.updateQty(index, -1);
+          if (!this.cart.includes(item)) this.kembaliKeCari();
+        } else if (tombol.toLowerCase() === 's') {
+          e.preventDefault();
+          const pilihan = this.pilihanSatuan(item);
+          if (pilihan.length > 1) this.gantiSatuan(item, pilihan[(pilihan.findIndex(s => s.nama === item.satuan) + 1) % pilihan.length].nama);
+        } else if (tombol === 'Delete' && e.shiftKey) {
+          e.preventDefault();
+          this.removeFromCart(index);
+          this.$nextTick(() => {
+            if (!this.fokusBarisKeranjang(Math.min(index, this.cart.length - 1))) this.kembaliKeCari();
+          });
+        }
       },
 
       // -- CART LOGIC --
@@ -2839,6 +3042,7 @@
       },
       // Enter di kotak cari (atau scan barcode): langsung masuk keranjang bila kode cocok / hasil tinggal satu
       addFromSearch() {
+        if (this.showReceiptModal) return; // Enter saat struk tampil = transaksi baru, bukan menambah barang
         const query = this.searchQuery.toLowerCase().trim();
         const list = this.filteredProducts;
         const product = list.find(p => p.ID_Produk.toLowerCase() === query) || (list.length === 1 ? list[0] : null);
@@ -2913,6 +3117,7 @@
           const res = await this.api('processTransaction', transactionData);
           this.lastTransaction = { ...transactionData, idTransaksi: res.idTransaksi };
           this.showReceiptModal = true;
+          this.searchQuery = '';
           this.cart = [];
           this.jumlahBayar = 0;
           this.namaPelanggan = '';
@@ -3018,6 +3223,7 @@
           id_produk: product.ID_Produk,
           nama_produk: product.Nama_Produk,
           stok_sekarang: product.Stok_Tersedia,
+          produk: product,
           dasar: product.Satuan_Dasar || 'pcs',
           pilihan: this.satuanBarang(product),
           satuan: product.Satuan_Dasar || 'pcs',
@@ -3059,6 +3265,7 @@
         this.transferForm = {
           id_produk: product.ID_Produk,
           nama_produk: product.Nama_Produk,
+          produk: product,
           stok: product.Stok,
           ke: '',
           qty: 1,
