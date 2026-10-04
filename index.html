@@ -401,6 +401,10 @@
     kbd.pintasan, .tombol-pintasan { display: none; }
   }
 
+  /* Isian jumlah fisik stok opname: muat 4 digit + nama satuan */
+  .isian-hitung { width: 132px; }
+  .isian-hitung .input-group-text { font-size: 0.72rem; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
+
   /* Baris keranjang ringkas */
   .baris-keranjang { font-size: 0.86rem; padding-top: 0.38rem !important; padding-bottom: 0.38rem !important; }
   .kecil { font-size: 0.76rem; }
@@ -869,6 +873,10 @@
     #app:has(.modal:not(.sheet-leave-active) .receipt-print-area) .main-wrapper {
       display: none !important;
     }
+    /* Modal lain yang masih terbuka di belakang struk (mis. Riwayat transaksi) tidak ikut tercetak */
+    .modal:not(:has(.receipt-print-area)) {
+      display: none !important;
+    }
     .modal:not(.sheet-leave-active):has(.receipt-print-area),
     .modal:not(.sheet-leave-active):has(.receipt-print-area) :is(.modal-dialog, .modal-content, .modal-body) {
       position: static !important;
@@ -941,9 +949,10 @@
             </button>
             <div class="collapse navbar-collapse" :class="{show: mobileNavOpen}" id="navbarNav">
               <div class="navbar-nav me-auto">
-                <button class="nav-link btn text-start" :class="{active: activeTab === 'kasir'}" @click="activeTab = 'kasir'; mobileNavOpen = false"><i class="fas fa-cash-register"></i> Kasir</button>
+                <button v-if="userRole !== 'karyawan'" class="nav-link btn text-start" :class="{active: activeTab === 'kasir'}" @click="activeTab = 'kasir'; mobileNavOpen = false"><i class="fas fa-cash-register"></i> Kasir</button>
+                <button v-if="userRole === 'karyawan'" class="nav-link btn text-start" :class="{active: activeTab === 'opname'}" @click="activeTab = 'opname'; mobileNavOpen = false"><i class="fas fa-clipboard-check"></i> Stok Opname</button>
                 <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'inventori'}" @click="activeTab = 'inventori'; mobileNavOpen = false"><i class="fas fa-boxes"></i> Inventori</button>
-                <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'laporan'}" @click="openLaporan(); mobileNavOpen = false"><i class="fas fa-chart-line"></i> Laporan</button>
+                <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'laporan'}" @click="openLaporan(); mobileNavOpen = false"><i class="fas fa-chart-line"></i> Laporan <span v-if="opnameMenunggu" class="badge bg-warning text-dark rounded-pill" title="Hitungan stok opname menunggu persetujuan">{{ opnameMenunggu }}</span></button>
                 <button v-if="userRole === 'admin'" class="nav-link btn text-start" :class="{active: activeTab === 'pengguna'}" @click="openPengguna(); mobileNavOpen = false"><i class="fas fa-users"></i> Pengguna</button>
               </div>
               <div class="d-flex align-items-center mt-2 mt-lg-0">
@@ -959,7 +968,7 @@
         <div class="pos-container">
           
           <!-- MODUL KASIR -->
-          <div v-show="activeTab === 'kasir'" class="h-100 modul" style="min-height: 0;">
+          <div v-if="userRole !== 'karyawan'" v-show="activeTab === 'kasir'" class="h-100 modul" style="min-height: 0;">
             <div class="row pos-row g-3">
               <!-- Daftar Produk -->
               <div class="col-md-6 col-lg-3 d-flex flex-column h-100" style="min-height: 0;">
@@ -994,6 +1003,7 @@
                   <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 py-2">
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
                     <div class="d-flex align-items-center gap-2">
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="openRiwayat" title="Transaksi shift ini: cetak ulang struk, batal, atau koreksi"><i class="fas fa-history me-1"></i>Riwayat</button>
                       <button class="btn btn-sm btn-outline-secondary py-0 tombol-pintasan" @click="bantuanPintasan" title="Daftar pintasan keyboard (F1)"><i class="fas fa-keyboard"></i><kbd class="pintasan">F1</kbd></button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan (F6)"><i class="fas fa-money-bill-wave me-1"></i>Kas<kbd class="pintasan">F6</kbd></button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir (F10)"><i class="fas fa-lock me-1"></i>Tutup Kasir<kbd class="pintasan">F10</kbd></button>
@@ -1003,6 +1013,14 @@
                   
                   <!-- Isi keranjang: daftar barang + panel bayar.
                        Layar kecil: panel bayar di bawah daftar. Layar lebar: panel bayar di kanan, daftar memakai tinggi penuh. -->
+                  <div v-if="koreksi" class="alert alert-warning rounded-0 border-0 border-bottom mb-0 py-2 px-3 small d-flex align-items-center gap-2 flex-shrink-0">
+                    <i class="fas fa-pen"></i>
+                    <div class="flex-grow-1 min-w-0">
+                      <strong>Koreksi {{ koreksi.id }}</strong> &bull; {{ koreksi.alasan }}<br>
+                      <span class="text-body-secondary">Perbaiki keranjang lalu simpan. Transaksi lama dibatalkan saat koreksi disimpan.</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-dark flex-shrink-0" @click="batalKoreksi">Batal koreksi</button>
+                  </div>
                   <div class="keranjang-isi">
                     <div class="card-body p-0 cart-container">
                       <transition-group tag="ul" name="item" class="list-group list-group-flush">
@@ -1071,11 +1089,72 @@
                       </button>
                       <button v-else class="btn btn-success btn-lg w-100 fw-bold py-2" :disabled="!canCheckout || isProcessing" @click="checkout">
                         <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {{ isProcessing ? 'MEMPROSES...' : 'BAYAR SEKARANG' }}<kbd v-if="!isProcessing" class="pintasan">F9</kbd>
+                        {{ isProcessing ? 'MEMPROSES...' : (koreksi ? 'SIMPAN KOREKSI' : 'BAYAR SEKARANG') }}<kbd v-if="!isProcessing" class="pintasan">F9</kbd>
                       </button>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODUL STOK OPNAME (Karyawan): hitung buta, hasilnya menunggu persetujuan Admin -->
+          <div v-if="userRole === 'karyawan'" v-show="activeTab === 'opname'" class="h-100 modul" style="min-height: 0;">
+            <div class="card pos-card">
+              <div class="card-header py-2 flex-shrink-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <div>
+                    <h5 class="mb-0 text-primary"><i class="fas fa-clipboard-check me-2"></i>Stok Opname {{ toko.nama }}</h5>
+                    <div class="small text-muted">Hitung barang di rak lalu isi jumlahnya. Kosongkan barang yang tidak dihitung.</div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary" @click="loadProducts(); loadKiriman()" title="Muat ulang daftar barang"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="row g-2">
+                  <div class="col-sm-8">
+                    <input type="search" class="form-control form-control-sm" placeholder="🔍 Cari nama barang / kode" v-model="opnameQuery">
+                  </div>
+                  <div class="col-sm-4">
+                    <select class="form-select form-select-sm" v-model="opnameKategori">
+                      <option value="">Semua kategori</option>
+                      <option v-for="kat in categoriesList" :key="kat" :value="kat">{{ kat }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                <div v-if="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                <ul v-else class="list-group list-group-flush">
+                  <li v-for="p in opnameProducts" :key="p.ID_Produk" class="list-group-item px-3 py-2" :class="{'bg-primary-subtle': totalHitung(p) !== null}">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                      <div class="flex-grow-1 min-w-0">
+                        <div class="fw-semibold text-truncate">{{ p.Nama_Produk }}</div>
+                        <div class="small text-muted">
+                          {{ p.ID_Produk }} &bull; {{ p.Kategori }}
+                          <span v-if="statusKiriman[p.ID_Produk]" class="badge ms-1" :class="{ MENUNGGU: 'bg-warning text-dark', DISETUJUI: 'bg-success', DITOLAK: 'bg-danger', DIGANTI: 'bg-secondary' }[statusKiriman[p.ID_Produk]]">
+                            {{ { MENUNGGU: 'Terkirim, menunggu', DISETUJUI: 'Disetujui', DITOLAK: 'Ditolak, hitung ulang', DIGANTI: 'Diganti' }[statusKiriman[p.ID_Produk]] }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                        <div v-for="sat in satuanHitung(p)" :key="sat.nama" class="input-group input-group-sm isian-hitung">
+                          <input type="number" min="0" step="1" inputmode="numeric" class="form-control text-center" :value="(hitung[p.ID_Produk] || {})[sat.nama]" @input="setHitung(p, sat.nama, $event.target.value)" :aria-label="'Jumlah ' + sat.nama + ' ' + p.Nama_Produk" placeholder="-">
+                          <span class="input-group-text">{{ sat.nama }}</span>
+                        </div>
+                        <button v-if="totalHitung(p) !== null" type="button" class="btn btn-sm btn-link text-danger px-1" @click="hapusHitung(p)" title="Kosongkan hitungan barang ini"><i class="fas fa-times"></i></button>
+                      </div>
+                    </div>
+                    <div v-if="totalHitung(p) !== null && satuanHitung(p).length > 1" class="small text-primary text-end">= {{ totalHitung(p) }} {{ p.Satuan_Dasar }}</div>
+                  </li>
+                  <li v-if="opnameProducts.length === 0" class="list-group-item text-center text-muted py-4">Tidak ada barang yang cocok.</li>
+                </ul>
+              </div>
+              <div class="card-footer py-2 flex-shrink-0 d-flex flex-wrap align-items-center gap-2">
+                <input type="text" class="form-control form-control-sm" style="max-width: 320px;" v-model="opnameCatatan" maxlength="200" placeholder="Catatan (opsional), mis. rak depan">
+                <div class="ms-auto small text-muted">{{ hasilHitung.length }} barang dihitung</div>
+                <button class="btn btn-primary btn-sm fw-bold" :disabled="hasilHitung.length === 0 || isSendingOpname" @click="kirimOpname">
+                  <span v-if="isSendingOpname" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <i v-else class="fas fa-paper-plane me-1"></i> Kirim ke Admin
+                </button>
               </div>
             </div>
           </div>
@@ -1176,7 +1255,7 @@
                     <tbody>
                       <tr v-for="u in users" :key="u.id" :class="{'text-muted': !u.aktif}">
                         <td class="ps-3 fw-bold">{{ u.nama }}</td>
-                        <td><span v-if="u.toko === 'ADMIN'" class="badge bg-dark">Admin (semua toko)</span><span v-else>Kasir {{ namaToko(u.toko) }}</span></td>
+                        <td><span v-if="u.toko === 'ADMIN'" class="badge bg-dark">Admin (semua toko)</span><span v-else>{{ u.peran === 'KARYAWAN' ? 'Karyawan (stok opname)' : 'Kasir' }} {{ namaToko(u.toko) }}</span></td>
                         <td><span class="badge" :class="u.aktif ? 'bg-success' : 'bg-secondary'">{{ u.aktif ? 'Aktif' : 'Nonaktif' }}</span></td>
                         <td>
                           <span v-if="u.pinPendek" class="badge bg-warning" title="PIN di bawah 6 angka mudah ditebak. Klik Ubah untuk menggantinya."><i class="fas fa-exclamation-triangle me-1"></i>PIN pendek, sebaiknya diganti</span>
@@ -1214,6 +1293,9 @@
                   <button class="btn" :class="laporanSubTab === 'kas' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('kas')">
                     <i class="fas fa-money-bill-wave me-1"></i> Kas
                   </button>
+                  <button class="btn" :class="laporanSubTab === 'opname' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('opname')">
+                    <i class="fas fa-clipboard-check me-1"></i> Stok Opname <span v-if="opnameMenunggu" class="badge bg-warning text-dark rounded-pill">{{ opnameMenunggu }}</span>
+                  </button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <button class="btn btn-sm btn-outline-dark" @click="printReport" title="Cetak Laporan / Simpan PDF">
@@ -1249,8 +1331,16 @@
                      <option>TRANSFER MASUK</option>
                      <option>BATAL PENJUALAN</option>
                      <option>PENYESUAIAN</option>
+                     <option>STOK OPNAME</option>
                      <option>STOK AWAL</option>
                      <option>HAPUS</option>
+                   </select>
+                   <select v-if="laporanSubTab === 'opname'" class="form-select form-select-sm w-auto" v-model="laporanFilter.status" @change="loadLaporan('opname')">
+                     <option value="">Semua status</option>
+                     <option value="MENUNGGU">Menunggu persetujuan</option>
+                     <option value="DISETUJUI">Disetujui</option>
+                     <option value="DITOLAK">Ditolak</option>
+                     <option value="DIGANTI">Diganti hitungan baru</option>
                    </select>
                    <input v-if="laporanSubTab === 'mutasi'" type="search" class="form-control form-control-sm" style="max-width: 340px;" placeholder="🔍 Barang / kode / no. transaksi, lalu Enter" v-model="laporanFilter.cari" @change="loadLaporan('mutasi')">
                  </div>
@@ -1379,7 +1469,7 @@
                      <tbody>
                        <template v-for="trx in transactions" :key="trx.ID_Transaksi">
                        <tr class="cursor-pointer" :class="{'text-decoration-line-through': trx.Status === 'BATAL'}" title="Klik untuk melihat rincian barang" @click="toggleDetail('transaksi', trx.ID_Transaksi)">
-                         <td class="ps-3 fw-bold" :class="trx.Status === 'BATAL' ? 'text-muted' : 'text-primary'"><i class="fas fa-fw small" :class="detailId === trx.ID_Transaksi ? 'fa-chevron-down' : 'fa-chevron-right'"></i> {{ trx.ID_Transaksi }} <span v-if="trx.Status === 'BATAL'" class="badge bg-danger">BATAL</span></td>
+                         <td class="ps-3 fw-bold" :class="trx.Status === 'BATAL' ? 'text-muted' : 'text-primary'"><i class="fas fa-fw small" :class="detailId === trx.ID_Transaksi ? 'fa-chevron-down' : 'fa-chevron-right'"></i> {{ trx.ID_Transaksi }} <span v-if="trx.Status === 'BATAL'" class="badge bg-danger">BATAL</span><span v-if="trx.Koreksi_Dari" class="badge bg-info text-dark" :title="'Koreksi dari ' + trx.Koreksi_Dari">KOREKSI</span></td>
                          <td>{{ formatDate(trx.Waktu_Transaksi) }}</td>
                          <td>{{ trx.Kasir }}</td>
                          <td>{{ namaToko(trx.Cabang) }}</td>
@@ -1405,8 +1495,15 @@
                              </tbody>
                            </table>
                            <div class="small text-muted">Dibayar: <strong>Rp {{ formatNumber(trx.Jumlah_Bayar) }}</strong> &bull; Kembalian: <strong>Rp {{ formatNumber(trx.Kembalian) }}</strong><span v-if="trx.Pelanggan"> &bull; Pelanggan: <strong>{{ trx.Pelanggan }}</strong></span><span v-if="laba(trx) !== null"> &bull; Modal barang: <strong>Rp {{ formatNumber(trx.Total_Modal) }}</strong></span></div>
+                           <div v-if="trx.Koreksi_Dari" class="small text-info-emphasis mt-1"><i class="fas fa-pen me-1"></i>Koreksi dari {{ trx.Koreksi_Dari }}</div>
                            <div v-if="trx.Status === 'BATAL'" class="small text-danger mt-1"><i class="fas fa-ban me-1"></i>Dibatalkan {{ trx.Keterangan_Batal }}</div>
-                           <button v-else class="btn btn-sm btn-outline-danger mt-2 no-print" @click="batalkanTransaksi(trx)"><i class="fas fa-ban me-1"></i> Batalkan Transaksi</button>
+                           <div class="d-flex flex-wrap gap-2 mt-2 no-print">
+                             <button class="btn btn-sm btn-outline-secondary" @click="cetakUlang(trx.ID_Transaksi)"><i class="fas fa-print me-1"></i> Cetak Ulang Struk</button>
+                             <template v-if="trx.Status !== 'BATAL'">
+                               <button class="btn btn-sm btn-outline-primary" @click="mulaiKoreksi(trx.ID_Transaksi)" title="Hanya untuk transaksi di shift kasir yang masih buka"><i class="fas fa-pen me-1"></i> Koreksi</button>
+                               <button class="btn btn-sm btn-outline-danger" @click="batalkanTransaksi(trx)"><i class="fas fa-ban me-1"></i> Batalkan Transaksi</button>
+                             </template>
+                           </div>
                          </td>
                        </tr>
                        </template>
@@ -1552,6 +1649,52 @@
                    </table>
                  </div>
 
+                 <!-- TABEL STOK OPNAME: hitungan karyawan, disetujui / ditolak Admin -->
+                 <div v-else-if="laporanSubTab === 'opname'">
+                   <div v-if="opnameBisaDipilih.length" class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-bottom no-print">
+                     <span class="small text-muted">{{ opnameDipilih.length }} dipilih</span>
+                     <button class="btn btn-sm btn-success" :disabled="opnameDipilih.length === 0" @click="prosesOpnameDipilih(true)"><i class="fas fa-check me-1"></i> Setujui</button>
+                     <button class="btn btn-sm btn-outline-danger" :disabled="opnameDipilih.length === 0" @click="prosesOpnameDipilih(false)"><i class="fas fa-times me-1"></i> Tolak</button>
+                     <span class="small text-muted ms-2">Stok baru = stok saat disetujui + selisih, jadi penjualan setelah barang dihitung tetap terhitung.</span>
+                   </div>
+                   <div class="table-responsive">
+                     <table class="table table-striped table-hover mb-0">
+                       <thead class="sticky-top">
+                         <tr>
+                           <th class="ps-3 no-print" style="width: 1%;"><input type="checkbox" class="form-check-input" :disabled="opnameBisaDipilih.length === 0" :checked="opnameBisaDipilih.length > 0 && opnameDipilih.length === opnameBisaDipilih.length" @change="pilihSemuaOpname($event.target.checked)" title="Pilih semua yang menunggu"></th>
+                           <th>Waktu</th>
+                           <th>Toko</th>
+                           <th>Barang</th>
+                           <th class="text-end">Stok sistem</th>
+                           <th class="text-end">Fisik</th>
+                           <th class="text-end">Selisih</th>
+                           <th>Dihitung</th>
+                           <th>Status</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         <tr v-for="o in opnameList" :key="o.ID_Opname">
+                           <td class="ps-3 no-print"><input v-if="o.Status === 'MENUNGGU'" type="checkbox" class="form-check-input" :value="o.ID_Opname" v-model="opnameDipilih"></td>
+                           <td class="small text-muted">{{ formatDate(o.Waktu) }}</td>
+                           <td>{{ namaToko(o.Cabang) }}</td>
+                           <td><span class="fw-bold">{{ o.Nama_Produk }}</span> <span class="text-muted small">({{ o.ID_Produk }})</span><div v-if="o.Catatan" class="small text-muted">{{ o.Catatan }}</div></td>
+                           <td class="text-end">{{ o.Stok_Sistem }}</td>
+                           <td class="text-end fw-bold">{{ o.Stok_Fisik }}</td>
+                           <td class="text-end fw-bold" :class="Number(o.Selisih) > 0 ? 'text-success' : (Number(o.Selisih) < 0 ? 'text-danger' : 'text-muted')">{{ Number(o.Selisih) === 0 ? 'Pas' : formatQty(o.Selisih) }}</td>
+                           <td>{{ o.Petugas }}</td>
+                           <td>
+                             <span class="badge" :class="{ MENUNGGU: 'bg-warning text-dark', DISETUJUI: 'bg-success', DITOLAK: 'bg-danger', DIGANTI: 'bg-secondary' }[o.Status]">{{ o.Status }}</span>
+                             <div v-if="o.Diproses_Oleh" class="small text-muted">{{ o.Diproses_Oleh }}<span v-if="o.Keterangan_Proses">: {{ o.Keterangan_Proses }}</span></div>
+                           </td>
+                         </tr>
+                         <tr v-if="opnameList.length === 0">
+                           <td colspan="9" class="text-center py-4 text-muted">{{ laporanFilter.status === 'MENUNGGU' ? 'Tidak ada hitungan yang menunggu persetujuan.' : 'Belum ada hitungan stok opname pada filter ini.' }}</td>
+                         </tr>
+                       </tbody>
+                     </table>
+                   </div>
+                 </div>
+
                  <!-- TABEL AUDIT MUTASI STOK -->
                  <div class="table-responsive" v-else-if="laporanSubTab === 'mutasi'">
                    <table class="table table-striped table-hover mb-0">
@@ -1597,6 +1740,52 @@
         </div>
       </div>
 
+      <!-- MODAL RIWAYAT TRANSAKSI SHIFT BERJALAN (kasir): cetak ulang, batal, koreksi -->
+      <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
+      <div v-if="showRiwayatModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;" @keydown.esc="showRiwayatModal = false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+          <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3">
+              <div>
+                <h5 class="modal-title fw-bold"><i class="fas fa-history me-2"></i>Transaksi Shift Ini</h5>
+                <div class="small text-muted">{{ toko.nama }} &bull; kasir dibuka {{ shift ? formatDate(shift.waktuBuka) : '-' }}</div>
+              </div>
+              <button type="button" class="btn-close" @click="showRiwayatModal = false"></button>
+            </div>
+            <div class="modal-body p-0">
+              <div v-if="loadingRiwayat" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+              <ul v-else class="list-group list-group-flush">
+                <li v-for="t in riwayatShift" :key="t.ID_Transaksi" class="list-group-item px-3 py-2" :class="{'text-muted': t.Status === 'BATAL'}">
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="fw-semibold" :class="{'text-decoration-line-through': t.Status === 'BATAL'}">
+                        Rp {{ formatNumber(t.Total_Belanja) }} <span class="badge bg-info">{{ t.Metode_Pembayaran }}</span>
+                        <span v-if="t.Status === 'BATAL'" class="badge bg-danger">BATAL</span>
+                        <span v-if="t.Koreksi_Dari" class="badge bg-info text-dark">KOREKSI</span>
+                      </div>
+                      <div class="small text-muted text-truncate">{{ formatDate(t.Waktu_Transaksi) }} &bull; {{ t.ID_Transaksi }} &bull; {{ t.Kasir }}<span v-if="t.Pelanggan"> &bull; {{ t.Pelanggan }}</span></div>
+                      <div v-if="t.Status === 'BATAL'" class="small text-danger text-truncate" :title="t.Keterangan_Batal">{{ t.Keterangan_Batal }}</div>
+                    </div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                      <button class="btn btn-sm btn-outline-secondary" @click="cetakUlang(t.ID_Transaksi)" title="Cetak ulang struk"><i class="fas fa-print"></i><span class="d-none d-sm-inline ms-1">Cetak</span></button>
+                      <template v-if="t.Status !== 'BATAL'">
+                        <button class="btn btn-sm btn-outline-primary" @click="mulaiKoreksi(t.ID_Transaksi)" title="Perbaiki barang / jumlah transaksi ini"><i class="fas fa-pen"></i><span class="d-none d-sm-inline ms-1">Koreksi</span></button>
+                        <button class="btn btn-sm btn-outline-danger" @click="batalkanTransaksi(t)" title="Batalkan seluruh transaksi"><i class="fas fa-ban"></i><span class="d-none d-sm-inline ms-1">Batal</span></button>
+                      </template>
+                    </div>
+                  </div>
+                </li>
+                <li v-if="riwayatShift.length === 0" class="list-group-item text-center text-muted py-4">Belum ada transaksi di shift ini.</li>
+              </ul>
+            </div>
+            <div class="modal-footer bg-body-tertiary py-2 small text-muted justify-content-start">
+              Batal &amp; koreksi hanya untuk shift yang sedang berjalan. Transaksi sebelumnya: minta Admin.
+            </div>
+          </div>
+        </div>
+      </div>
+      </transition>
+
       <!-- MODAL TAMBAH / UBAH PENGGUNA -->
       <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showUserModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;">
@@ -1613,11 +1802,19 @@
                   <input type="text" id="userNama" class="form-control" v-model="userForm.nama" placeholder="Nama orangnya, mis. Wayan" required>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label small fw-bold" for="userToko">Peran <span class="text-danger">*</span></label>
+                  <label class="form-label small fw-bold" for="userToko">Toko <span class="text-danger">*</span></label>
                   <select id="userToko" class="form-select" v-model="userForm.toko" required>
-                    <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">Kasir {{ t.nama }}</option>
+                    <option v-for="t in daftarToko" :key="t.kode" :value="t.kode">{{ t.nama }}</option>
                     <option value="ADMIN">Admin (mengelola semua toko)</option>
                   </select>
+                </div>
+                <div class="mb-3" v-if="userForm.toko !== 'ADMIN'">
+                  <label class="form-label small fw-bold" for="userPeran">Peran <span class="text-danger">*</span></label>
+                  <select id="userPeran" class="form-select" v-model="userForm.peran">
+                    <option value="KASIR">Kasir (melayani penjualan)</option>
+                    <option value="KARYAWAN">Karyawan (hanya stok opname)</option>
+                  </select>
+                  <div class="form-text" v-if="userForm.peran === 'KARYAWAN'">Menghitung stok tanpa melihat angka sistem. Hasilnya baru mengubah stok setelah Admin menyetujui di Laporan &rarr; Stok Opname.</div>
                 </div>
                 <div class="mb-3">
                   <label class="form-label small fw-bold" for="userPin">PIN <span v-if="!userForm.id" class="text-danger">*</span></label>
@@ -2012,6 +2209,8 @@
                   <h5 class="fw-bold mb-0" style="font-size: 16px; letter-spacing: 1px;">TOKO SUKAHATI</h5>
                   <div style="font-size: 11px;" class="text-muted">{{ lastTransaction?.nama_toko }}</div>
                   <div style="font-size: 10px;" class="text-muted">Pusat Belanja Hemat & Lengkap</div>
+                  <div v-if="lastTransaction?.batal" class="fw-bold mt-1" style="font-size: 13px; letter-spacing: 2px;">*** BATAL ***</div>
+                  <div v-else-if="lastTransaction?.cetakUlang" class="fw-bold mt-1" style="font-size: 11px; letter-spacing: 1px;">-- CETAK ULANG --</div>
                 </div>
                 
                 <div class="receipt-divider"></div>
@@ -2032,6 +2231,10 @@
                   <div class="d-flex justify-content-between" v-if="lastTransaction?.pelanggan">
                     <span>Pelanggan:</span>
                     <span>{{ lastTransaction?.pelanggan }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between" v-if="lastTransaction?.koreksi_dari">
+                    <span>Koreksi dari:</span>
+                    <span>{{ lastTransaction?.koreksi_dari }}</span>
                   </div>
                 </div>
                 
@@ -2083,7 +2286,7 @@
             </div>
             <div class="modal-footer py-2 no-print d-flex justify-content-between">
               <button type="button" class="btn btn-outline-secondary btn-sm" @click="closeReceiptModal">
-                <i class="fas fa-arrow-left me-1"></i> Transaksi Baru<kbd class="pintasan">Enter</kbd>
+                <i class="fas fa-arrow-left me-1"></i> {{ lastTransaction?.cetakUlang ? 'Tutup' : 'Transaksi Baru' }}<kbd class="pintasan">Enter</kbd>
               </button>
               <button type="button" class="btn btn-primary btn-sm fw-bold px-3" @click="printReceipt">
                 <i class="fas fa-print me-1"></i> Cetak Struk<kbd class="pintasan">P</kbd>
@@ -2169,7 +2372,7 @@
         isLoggedIn: false,
         tema: bacaTema(),
         isLoggingIn: false,
-        userRole: '', // 'kasir' atau 'admin'
+        userRole: '', // 'kasir', 'karyawan' (hanya stok opname) atau 'admin'
         token: '', // token sesi dari login; dikirim ke server di setiap panggilan (PIN tidak disimpan)
         namaPengguna: '',
 
@@ -2177,7 +2380,7 @@
         users: [],
         showUserModal: false,
         isSavingUser: false,
-        userForm: { id: '', nama: '', toko: '', pin: '', aktif: true },
+        userForm: { id: '', nama: '', toko: '', peran: 'KASIR', pin: '', aktif: true },
         pinInput: '',
         toko: { kode: '', nama: '' }, // toko yang sedang dikerjakan (akun toko: tetap; Admin: bisa ganti)
         daftarToko: [],
@@ -2197,7 +2400,7 @@
         purchases: [],
         loading: false,
         loadingLaporan: false,
-        laporanFilter: { cabang: '', dari: '', sampai: '', tipe: '', cari: '' }, // cabang '' = semua toko; tipe & cari hanya untuk tab Audit Mutasi
+        laporanFilter: { cabang: '', dari: '', sampai: '', tipe: '', cari: '', status: 'MENUNGGU' }, // cabang '' = semua toko; tipe & cari untuk Audit Mutasi, status untuk Stok Opname
         // Rincian barang dari baris laporan yang sedang dibuka
         detailId: '',
         detailItems: [],
@@ -2218,6 +2421,24 @@
         // Struk Belanja / Receipt State
         showReceiptModal: false,
         lastTransaction: null,
+
+        // Transaksi shift berjalan (cetak ulang / batal / koreksi dari layar kasir)
+        showRiwayatModal: false,
+        riwayatShift: [],
+        loadingRiwayat: false,
+        // Koreksi transaksi: { id, alasan, kembali: { id_produk: satuan dasar yang kembali ke stok } } atau null
+        koreksi: null,
+
+        // Stok opname. Karyawan: hitung = { id_produk: { namaSatuan: jumlah } }; Admin: daftar hitungan untuk disetujui
+        opnameQuery: '',
+        opnameKategori: '',
+        hitung: {},
+        opnameCatatan: '',
+        opnameKiriman: [],
+        isSendingOpname: false,
+        opnameList: [],
+        opnameDipilih: [],
+        opnameMenunggu: 0,
 
         // Product Modal State
         showProductModal: false,
@@ -2302,7 +2523,7 @@
       ringkasanLaporan() {
         const tab = this.laporanSubTab;
         if (tab === 'ringkasan') return '';
-        const rows = { transaksi: this.transactions, pembelian: this.purchases, mutasi: this.stockLogs, shift: this.shifts, kas: this.kasList }[tab];
+        const rows = { transaksi: this.transactions, pembelian: this.purchases, mutasi: this.stockLogs, shift: this.shifts, kas: this.kasList, opname: this.opnameList }[tab];
         const rupiah = n => 'Rp ' + this.formatNumber(n);
         const jumlah = (list, kolom) => list.reduce((sum, r) => sum + (Number(r[kolom]) || 0), 0);
         let teks = rows.length + ' baris';
@@ -2321,6 +2542,9 @@
           teks += ' • Keluar ' + rupiah(jumlah(rows.filter(r => r.Jenis !== 'MASUK'), 'Jumlah'));
         } else if (tab === 'shift') {
           teks += ' • Total selisih ' + rupiah(jumlah(rows, 'Selisih'));
+        } else if (tab === 'opname') {
+          const menunggu = rows.filter(r => r.Status === 'MENUNGGU').length;
+          if (menunggu) teks += ` • ${menunggu} menunggu persetujuan`;
         }
         // 200 = BATAS_LAPORAN di Code.js
         if (rows.length >= 200) teks += ' (dibatasi 200 baris terbaru — persempit rentang tanggal)';
@@ -2373,6 +2597,26 @@
           { label: 'Rata-rata per transaksi', nilai: rp(r.transaksi ? r.omzet / r.transaksi : 0), catatan: 'Omzet dibagi jumlah transaksi' },
           { label: 'Nilai persediaan', nilai: rp(this.nilaiPersediaan), catatan: 'Stok saat ini × harga beli' }
         ];
+      },
+      // Barang yang tampil di daftar hitung stok opname
+      opnameProducts() {
+        const list = this.opnameKategori ? this.products.filter(p => p.Kategori === this.opnameKategori) : this.products;
+        return this.cariProduk(list, this.opnameQuery);
+      },
+      // Barang yang sudah diisi jumlah fisiknya: [{ id_produk, stok_fisik }]
+      hasilHitung() {
+        return this.products
+          .map(p => ({ id_produk: p.ID_Produk, stok_fisik: this.totalHitung(p) }))
+          .filter(x => x.stok_fisik !== null);
+      },
+      // Status kiriman hari ini per barang (yang terbaru), untuk penanda di daftar hitung
+      statusKiriman() {
+        const status = {};
+        this.opnameKiriman.forEach(o => { if (!status[o.ID_Produk]) status[o.ID_Produk] = o.Status; });
+        return status;
+      },
+      opnameBisaDipilih() {
+        return this.opnameList.filter(o => o.Status === 'MENUNGGU');
       },
       canCheckout() {
         if (!this.shift || this.cart.length === 0) return false;
@@ -2470,7 +2714,15 @@
           this.namaPengguna = sesi.nama;
           this.isLoggedIn = true;
           this.loadProducts();
-          this.loadShift();
+          if (sesi.role === 'karyawan') {
+            this.activeTab = 'opname';
+            this.bacaDrafHitung();
+            this.loadKiriman();
+          } else {
+            this.activeTab = 'kasir';
+            this.loadShift();
+          }
+          if (sesi.role === 'admin') this.hitungOpnameMenunggu();
         } catch (err) {
           this.gagal(err, 'Akses Ditolak');
         } finally {
@@ -2488,6 +2740,11 @@
         this.jumlahBayar = 0;
         this.shift = null;
         this.shiftDimuat = false;
+        this.koreksi = null;
+        this.namaPelanggan = '';
+        this.hitung = {};
+        this.opnameKiriman = [];
+        this.showRiwayatModal = false;
         this.activeTab = 'kasir';
       },
 
@@ -2502,7 +2759,7 @@
             const p = this.products.find(p => p.ID_Produk === item.id_produk);
             const satuan = p && this.satuanBarang(p).find(s => s.nama === item.satuan);
             if (!satuan || satuan.harga <= 0) return [];
-            const stok = sisa[p.ID_Produk] === undefined ? p.Stok_Tersedia : sisa[p.ID_Produk];
+            const stok = sisa[p.ID_Produk] === undefined ? this.stokJual(p) : sisa[p.ID_Produk];
             const qty = Math.min(item.qty, Math.floor(stok / satuan.isi));
             if (qty < 1) return [];
             sisa[p.ID_Produk] = stok - qty * satuan.isi;
@@ -2519,6 +2776,7 @@
       gantiToko(kode) {
         this.toko = this.daftarToko.find(t => t.kode === kode) || this.toko;
         this.cart = [];
+        this.koreksi = null;
         this.jumlahBayar = 0;
         this.loadProducts();
         this.loadShift();
@@ -2540,10 +2798,12 @@
           mutasi: ['getStockLogs', 'stockLogs'],
           shift: ['getShifts', 'shifts'],
           kas: ['getKas', 'kasList'],
+          opname: ['getOpname', 'opnameList'],
           ringkasan: ['getRingkasan', 'ringkasan']
         }[tab];
         this.laporanSubTab = tab;
         this.detailId = '';
+        this.opnameDipilih = [];
         if (tab === 'ringkasan') this.loadProducts(); // nilai persediaan & stok menipis dari data terbaru
         this.loadingLaporan = true;
         try {
@@ -2562,14 +2822,14 @@
         this.loadLaporan(this.laporanSubTab);
       },
       resetFilterLaporan() {
-        this.laporanFilter = { cabang: '', dari: '', sampai: '', tipe: '', cari: '' };
+        this.laporanFilter = { cabang: '', dari: '', sampai: '', tipe: '', cari: '', status: '' };
         this.loadLaporan(this.laporanSubTab);
       },
 
       async batalkanTransaksi(trx) {
         const { value: alasan, isConfirmed } = await Swal.fire({
           title: 'Batalkan Transaksi?',
-          text: `${trx.ID_Transaksi} • Rp ${this.formatNumber(trx.Total_Belanja)}. Stok barangnya dikembalikan ke ${this.namaToko(trx.Cabang)}.`,
+          text: `${trx.ID_Transaksi} • Rp ${this.formatNumber(trx.Total_Belanja)}. Stok barangnya dikembalikan ke ${this.namaToko(trx.Cabang || this.toko.kode)}.`,
           icon: 'warning',
           input: 'text',
           inputPlaceholder: 'Alasan pembatalan (wajib)',
@@ -2586,7 +2846,8 @@
           const res = await this.api('voidTransaction', trx.ID_Transaksi, alasan);
           if (res.peringatan) Swal.fire('Dibatalkan', res.message, 'warning');
           else this.sukses('Dibatalkan', res.message);
-          this.loadLaporan('transaksi');
+          if (this.activeTab === 'laporan') this.loadLaporan('transaksi');
+          if (this.showRiwayatModal) this.loadRiwayat();
           this.loadProducts();
         } catch (err) {
           this.gagal(err);
@@ -2627,8 +2888,8 @@
       },
       openUserModal(user) {
         this.userForm = user
-          ? { id: user.id, nama: user.nama, toko: user.toko, pin: '', aktif: user.aktif }
-          : { id: '', nama: '', toko: this.toko.kode, pin: '', aktif: true };
+          ? { id: user.id, nama: user.nama, toko: user.toko, peran: user.peran, pin: '', aktif: user.aktif }
+          : { id: '', nama: '', toko: this.toko.kode, peran: 'KASIR', pin: '', aktif: true };
         this.showUserModal = true;
       },
       async saveUserSubmit() {
@@ -2973,6 +3234,11 @@
         }
       },
 
+      // Stok yang bisa dijual: stok toko + barang yang akan kembali dari transaksi yang sedang dikoreksi
+      stokJual(product) {
+        return product.Stok_Tersedia + ((this.koreksi && this.koreksi.kembali[product.ID_Produk]) || 0);
+      },
+
       // -- CART LOGIC --
       // Alur keyboard kasir: ketik di kotak cari -> Tab menyorot kartu barang pertama (Tab lagi = berikutnya)
       // -> Enter memasukkan ke keranjang & kursor pindah ke kolom jumlah -> Enter kembali ke kotak cari.
@@ -3000,7 +3266,7 @@
           Swal.fire('Oopss', 'Harga jual barang ini belum diisi!', 'warning');
           return;
         }
-        if (product.Stok_Tersedia <= 0) {
+        if (this.stokJual(product) <= 0) {
           Swal.fire('Oopss', 'Stok barang ini habis!', 'warning');
           return;
         }
@@ -3066,7 +3332,7 @@
       // Mengembalikan false bila baris ini dihapus karena stok tidak cukup untuk 1 satuan.
       validateCartQty(item) {
         const product = this.products.find(p => p.ID_Produk === item.id_produk);
-        const sisa = product ? product.Stok_Tersedia - this.dasarDipakaiBarisLain(item) : item.qty * item.isi;
+        const sisa = product ? this.stokJual(product) - this.dasarDipakaiBarisLain(item) : item.qty * item.isi;
         const maks = Math.floor(sisa / item.isi);
         let qtyVal = parseInt(item.qty, 10);
 
@@ -3076,7 +3342,7 @@
         if (qtyVal > maks) {
           qtyVal = maks;
           Swal.fire('Stok Terbatas', maks > 0
-            ? `Maksimal ${maks} ${item.satuan} (stok ${product.Stok_Tersedia} ${product.Satuan_Dasar})`
+            ? `Maksimal ${maks} ${item.satuan} (stok ${this.stokJual(product)} ${product.Satuan_Dasar})`
             : `Stok tidak cukup untuk 1 ${item.satuan}`, 'warning');
         }
         if (qtyVal < 1) {
@@ -3114,9 +3380,13 @@
         };
 
         try {
-          const res = await this.api('processTransaction', transactionData);
-          this.lastTransaction = { ...transactionData, idTransaksi: res.idTransaksi };
+          const koreksi = this.koreksi;
+          const res = koreksi
+            ? await this.api('koreksiTransaksi', koreksi.id, koreksi.alasan, transactionData)
+            : await this.api('processTransaction', transactionData);
+          this.lastTransaction = { ...transactionData, idTransaksi: res.idTransaksi, koreksi_dari: koreksi ? koreksi.id : '' };
           this.showReceiptModal = true;
+          this.koreksi = null;
           this.searchQuery = '';
           this.cart = [];
           this.jumlahBayar = 0;
@@ -3131,6 +3401,100 @@
       },
       closeReceiptModal() {
         this.showReceiptModal = false;
+      },
+
+      // -- RIWAYAT SHIFT: CETAK ULANG, BATAL, KOREKSI --
+      openRiwayat() {
+        this.showRiwayatModal = true;
+        this.loadRiwayat();
+      },
+      async loadRiwayat() {
+        this.loadingRiwayat = true;
+        try {
+          this.riwayatShift = await this.api('getTransaksiShift', this.toko.kode);
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat transaksi');
+        } finally {
+          this.loadingRiwayat = false;
+        }
+      },
+      async cetakUlang(idTransaksi) {
+        try {
+          const struk = await this.api('getStruk', idTransaksi);
+          this.lastTransaction = { ...struk, cetakUlang: true };
+          this.showReceiptModal = true;
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat struk');
+        }
+      },
+      // Koreksi: barang transaksi lama dimuat ke keranjang untuk diperbaiki. Saat dibayar, transaksi lama
+      // dibatalkan dan penggantinya disimpan dalam satu langkah di server (lihat koreksiTransaksi di Code.js).
+      async mulaiKoreksi(idTransaksi) {
+        if (this.cart.length && !this.koreksi) {
+          const lanjut = await Swal.fire({
+            title: 'Kosongkan keranjang?',
+            text: 'Keranjang yang sekarang akan diganti dengan barang dari transaksi yang dikoreksi.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, lanjut',
+            cancelButtonText: 'Batal'
+          });
+          if (!lanjut.isConfirmed) return;
+        }
+        const { value: alasan, isConfirmed } = await Swal.fire({
+          title: 'Koreksi Transaksi',
+          text: `${idTransaksi}. Barangnya dimuat ke keranjang untuk diperbaiki. Transaksi lama baru dibatalkan saat koreksi disimpan.`,
+          input: 'text',
+          inputPlaceholder: 'Alasan koreksi (wajib), mis. salah jumlah',
+          inputValidator: v => v.trim() ? undefined : 'Alasan wajib diisi',
+          showCancelButton: true,
+          confirmButtonText: 'Muat ke Keranjang',
+          cancelButtonText: 'Batal'
+        });
+        if (!isConfirmed) return;
+
+        try {
+          const struk = await this.api('getStruk', idTransaksi);
+          if (struk.batal) throw new Error('Transaksi ini sudah dibatalkan');
+          // Admin bisa mengoreksi transaksi toko lain: pindah ke toko itu dulu
+          if (struk.cabang !== this.toko.kode) {
+            this.toko = this.daftarToko.find(t => t.kode === struk.cabang) || this.toko;
+            await this.loadShift();
+          }
+          if (!this.shift || this.shift.id !== struk.idShift) {
+            throw new Error('Koreksi hanya untuk transaksi di shift kasir yang sedang berjalan. Untuk transaksi lama, batalkan lalu input ulang.');
+          }
+          const kembali = {};
+          struk.cart.forEach(it => { kembali[it.id_produk] = (kembali[it.id_produk] || 0) + it.qty * it.isi; });
+          this.koreksi = { id: struk.idTransaksi, alasan: alasan.trim(), kembali };
+          this.cart = [];
+          await this.loadProducts();
+          // Barang dimuat dengan harga saat ini; barang yang sudah dihapus dari master dilewati
+          const hilang = [];
+          struk.cart.forEach(it => {
+            const p = this.products.find(p => p.ID_Produk === it.id_produk);
+            const satuan = p && this.satuanBarang(p).find(x => x.nama === (it.satuan || p.Satuan_Dasar));
+            if (!satuan || satuan.harga <= 0) return hilang.push(it.nama);
+            this.cart.push({ id_produk: p.ID_Produk, nama: p.Nama_Produk, satuan: satuan.nama, isi: satuan.isi, harga_jual: satuan.harga, qty: it.qty, subtotal: it.qty * satuan.harga });
+          });
+          [...this.cart].forEach(item => this.validateCartQty(item));
+          this.namaPelanggan = struk.pelanggan;
+          this.metodePembayaran = struk.metode_pembayaran;
+          this.jumlahBayar = 0;
+          this.showRiwayatModal = false;
+          this.activeTab = 'kasir';
+          if (hilang.length) Swal.fire('Perhatian', 'Barang berikut sudah tidak bisa dijual dan tidak dimuat: ' + hilang.join(', '), 'warning');
+        } catch (err) {
+          this.koreksi = null;
+          this.gagal(err, 'Tidak bisa dikoreksi');
+        }
+      },
+      batalKoreksi() {
+        this.koreksi = null;
+        this.cart = [];
+        this.namaPelanggan = '';
+        this.jumlahBayar = 0;
+        this.loadProducts();
       },
       printReceipt() {
         window.print();
@@ -3382,6 +3746,125 @@
         } finally {
           this.isSavingPurchase = false;
         }
+      },
+
+      // -- STOK OPNAME (KARYAWAN) --
+      // Satuan yang diisi saat menghitung: satuan besar dulu (mis. Slop isi 10), lalu satuan dasar.
+      // Satuan berisi 1 (harga kedua untuk satuan yang sama) tidak perlu diisi terpisah.
+      satuanHitung(product) {
+        const besar = (product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
+        return besar.concat([{ nama: product.Satuan_Dasar || 'pcs', isi: 1 }]);
+      },
+      // Total hitungan fisik dalam satuan dasar; null bila barang ini belum diisi sama sekali
+      totalHitung(product) {
+        const isian = this.hitung[product.ID_Produk];
+        if (!isian) return null;
+        let total = null;
+        this.satuanHitung(product).forEach(s => {
+          const v = isian[s.nama];
+          if (v === '' || v === undefined || v === null) return;
+          total = (total || 0) + Number(v) * s.isi;
+        });
+        return total;
+      },
+      setHitung(product, satuan, nilai) {
+        const isian = { ...(this.hitung[product.ID_Produk] || {}) };
+        isian[satuan] = nilai === '' ? '' : Math.max(0, Math.floor(Number(nilai) || 0));
+        this.hitung = { ...this.hitung, [product.ID_Produk]: isian };
+        this.simpanDrafHitung();
+      },
+      hapusHitung(product) {
+        const baru = { ...this.hitung };
+        delete baru[product.ID_Produk];
+        this.hitung = baru;
+        this.simpanDrafHitung();
+      },
+      // Hitungan yang belum terkirim disimpan di perangkat ini, supaya tidak hilang bila halaman tertutup
+      kunciDraf() {
+        return 'kasir-opname-' + this.toko.kode + '-' + this.namaPengguna;
+      },
+      simpanDrafHitung() {
+        try { localStorage.setItem(this.kunciDraf(), JSON.stringify(this.hitung)); } catch (err) {}
+      },
+      bacaDrafHitung() {
+        try {
+          this.hitung = JSON.parse(localStorage.getItem(this.kunciDraf()) || '{}') || {};
+        } catch (err) {
+          this.hitung = {};
+        }
+      },
+      async loadKiriman() {
+        try {
+          this.opnameKiriman = await this.api('getOpname');
+        } catch (err) {
+          this.gagal(err, 'Gagal memuat kiriman');
+        }
+      },
+      async kirimOpname() {
+        const items = this.hasilHitung;
+        if (items.length === 0) return;
+        const konfirmasi = await Swal.fire({
+          title: 'Kirim hasil hitung?',
+          text: `${items.length} barang akan dikirim ke Admin untuk disetujui.`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Kirim',
+          cancelButtonText: 'Periksa lagi'
+        });
+        if (!konfirmasi.isConfirmed) return;
+
+        this.isSendingOpname = true;
+        try {
+          const res = await this.api('submitOpname', { cabang: this.toko.kode, items, catatan: this.opnameCatatan });
+          this.hitung = {};
+          this.opnameCatatan = '';
+          this.simpanDrafHitung();
+          this.sukses('Terkirim', res.message);
+          this.loadKiriman();
+        } catch (err) {
+          this.gagal(err);
+        } finally {
+          this.isSendingOpname = false;
+        }
+      },
+
+      // -- STOK OPNAME (PERSETUJUAN ADMIN) --
+      async hitungOpnameMenunggu() {
+        try {
+          this.opnameMenunggu = (await this.api('getOpname', { status: 'MENUNGGU' })).length;
+        } catch (err) {
+          // hanya penanda angka di menu; abaikan bila gagal
+        }
+      },
+      pilihSemuaOpname(centang) {
+        this.opnameDipilih = centang ? this.opnameBisaDipilih.map(o => o.ID_Opname) : [];
+      },
+      async prosesOpnameDipilih(setuju) {
+        const ids = this.opnameDipilih.slice();
+        if (ids.length === 0) return;
+        const form = await Swal.fire({
+          title: setuju ? `Setujui ${ids.length} hitungan?` : `Tolak ${ids.length} hitungan?`,
+          text: setuju ? 'Stok sistem disesuaikan dengan hasil hitung fisik dan tercatat di Audit Mutasi Stok.' : 'Stok tidak berubah. Karyawan bisa menghitung ulang.',
+          icon: setuju ? 'question' : 'warning',
+          input: 'text',
+          inputPlaceholder: setuju ? 'Keterangan (opsional)' : 'Alasan penolakan (wajib)',
+          inputValidator: v => setuju || v.trim() ? undefined : 'Alasan wajib diisi',
+          showCancelButton: true,
+          confirmButtonColor: setuju ? undefined : '#d33',
+          confirmButtonText: setuju ? 'Setujui' : 'Tolak',
+          cancelButtonText: 'Batal'
+        });
+        if (!form.isConfirmed) return;
+
+        try {
+          const res = await this.api('prosesOpname', ids, setuju, form.value);
+          this.sukses(setuju ? 'Disetujui' : 'Ditolak', res.message);
+        } catch (err) {
+          this.gagal(err);
+        }
+        this.loadLaporan('opname');
+        this.hitungOpnameMenunggu();
+        if (setuju) this.loadProducts();
       }
     }
   }).mount('#app')
