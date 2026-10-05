@@ -978,7 +978,7 @@
                     <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang (F2)" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang. Panah bawah atau Tab: pilih dari daftar." v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch" @keydown.down.prevent="fokusKartu(0)" @keydown.up.prevent="fokusBarisKeranjang(0)">
                   </div>
                   <div class="card-body p-2 product-grid">
-                    <div v-if="loading" class="text-center py-5">
+                    <div v-if="loading && products.length === 0" class="text-center py-5">
                        <div class="spinner-border text-primary" role="status"></div>
                     </div>
                     
@@ -1123,7 +1123,7 @@
                 </div>
               </div>
               <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
-                <div v-if="loading" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+                <div v-if="loading && products.length === 0" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
                 <ul v-else class="list-group list-group-flush">
                   <li v-for="p in opnameProducts" :key="p.ID_Produk" class="list-group-item px-3 py-2" :class="{'bg-primary-subtle': totalHitung(p) !== null}">
                     <div class="d-flex flex-wrap align-items-center gap-2">
@@ -2338,10 +2338,15 @@
   // Di dalam Apps Script lewat google.script.run; di GitHub Pages lewat API doPost (window.API_URL).
   async function server(fn, ...args) {
     const data = JSON.parse(JSON.stringify(args));
+    // Lama tiap panggilan dicatat di console (tanpa isi datanya), untuk melacak bagian yang lambat
+    const mulai = Date.now();
+    const detik = ms => (ms / 1000).toFixed(1) + ' dtk';
+    const catat = msServer => console.info('[server] ' + fn + ': ' + detik(Date.now() - mulai) +
+      (msServer === undefined ? '' : ', ' + detik(msServer) + ' di antaranya kerja server'));
     if (window.google && google.script) {
       return new Promise((resolve, reject) => {
         google.script.run
-          .withSuccessHandler(resolve)
+          .withSuccessHandler(hasil => { catat(); resolve(hasil); })
           .withFailureHandler(reject)
           [fn](...data);
       });
@@ -2355,6 +2360,7 @@
     } catch (err) {
       throw new Error('Tidak bisa menghubungi server. Periksa koneksi internet lalu coba lagi.');
     }
+    catat(jawaban.ms);
     if (!jawaban.ok) throw new Error(jawaban.error);
     return jawaban.result;
   }
@@ -3435,6 +3441,14 @@
             ? await this.api('koreksiTransaksi', koreksi.id, koreksi.alasan, transactionData)
             : await this.api('processTransaction', transactionData);
           this.lastTransaction = { ...transactionData, idTransaksi: res.idTransaksi, koreksi_dari: koreksi ? koreksi.id : '' };
+          // Stok di layar langsung disesuaikan; angka pastinya menyusul dari server (loadProducts di bawah)
+          const ubah = { ...(koreksi ? koreksi.kembali : {}) };
+          this.cart.forEach(item => { ubah[item.id_produk] = (ubah[item.id_produk] || 0) - item.qty * item.isi; });
+          this.products.forEach(p => {
+            if (!ubah[p.ID_Produk]) return;
+            p.Stok_Tersedia += ubah[p.ID_Produk];
+            if (p.Stok) p.Stok[this.toko.kode] += ubah[p.ID_Produk];
+          });
           this.showReceiptModal = true;
           this.koreksi = null;
           this.searchQuery = '';
