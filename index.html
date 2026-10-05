@@ -1299,6 +1299,10 @@
                   </button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-sm btn-outline-dark" @click="unduhBackup" :disabled="isBackup" title="Unduh seluruh data (semua toko, semua riwayat) sebagai satu file Excel">
+                    <span v-if="isBackup" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <i v-else class="fas fa-download me-1"></i> Backup Data
+                  </button>
                   <button class="btn btn-sm btn-outline-dark" @click="printReport" title="Cetak Laporan / Simpan PDF">
                     <i class="fas fa-print me-1"></i> Cetak Laporan
                   </button>
@@ -2363,6 +2367,19 @@
     return Array.from(product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
   }
 
+  // Pembuat file Excel hanya dimuat saat Admin mengunduh backup
+  const URL_XLSX = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.mini.min.js';
+  function muatSkrip(src) {
+    if (window.XLSX) return Promise.resolve();
+    return new Promise((selesai, gagal) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = selesai;
+      s.onerror = () => gagal(new Error('Gagal memuat pembuat file Excel. Periksa koneksi internet lalu coba lagi.'));
+      document.head.appendChild(s);
+    });
+  }
+
   // Dialog Swal yang berisi form sendiri: fokus ke isian pertama, dan Enter di isian = tombol konfirmasi
   function siapkanDialog(idFokus) {
     document.getElementById(idFokus).focus();
@@ -2389,6 +2406,7 @@
         users: [],
         showUserModal: false,
         isSavingUser: false,
+        isBackup: false,
         userForm: { id: '', nama: '', toko: '', peran: 'KASIR', pin: '', aktif: true },
         pinInput: '',
         toko: { kode: '', nama: '' }, // toko yang sedang dikerjakan (akun toko: tetap; Admin: bisa ganti)
@@ -3541,6 +3559,24 @@
       },
       printReport() {
         window.print();
+      },
+      // Backup: seluruh database (semua sheet, semua toko) menjadi satu file Excel di perangkat ini
+      async unduhBackup() {
+        if (this.isBackup) return;
+        this.isBackup = true;
+        try {
+          const [data] = await Promise.all([this.api('getBackup'), muatSkrip(URL_XLSX)]);
+          const buku = XLSX.utils.book_new();
+          data.sheets.forEach(s => XLSX.utils.book_append_sheet(buku, XLSX.utils.aoa_to_sheet(s.baris), s.nama.slice(0, 31)));
+          const nama = 'backup-kasir-sukahati-' + data.waktu.replace(/[: ]/g, '-') + '.xlsx';
+          XLSX.writeFile(buku, nama);
+          const baris = data.sheets.reduce((n, s) => n + Math.max(0, s.baris.length - 1), 0);
+          Swal.fire('Backup diunduh', `${nama} berisi ${data.sheets.length} sheet (${this.formatNumber(baris)} baris data). Simpan di tempat aman. PIN pengguna tidak ikut di dalam file.`, 'success');
+        } catch (err) {
+          this.gagal(err, 'Backup gagal');
+        } finally {
+          this.isBackup = false;
+        }
       },
 
       // -- PRODUCT CRUD --
