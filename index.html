@@ -2355,6 +2355,14 @@
     return jawaban.result;
   }
 
+  // Satuan besar sebuah barang (isi > 1), terbesar dulu. Disalin ke array biasa sebelum diurutkan:
+  // di halaman Apps Script, .filter() pada data reaktif bisa mengembalikan array reaktif juga, sehingga
+  // .sort() di dalam tampilan mengubah data yang sedang digambar, memicu gambar ulang tanpa henti
+  // (terjadi pada barang dengan dua satuan besar atau lebih, mis. Slop & Bal).
+  function satuanBesar(product) {
+    return Array.from(product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
+  }
+
   // Dialog Swal yang berisi form sendiri: fokus ke isian pertama, dan Enter di isian = tombol konfirmasi
   function siapkanDialog(idFokus) {
     document.getElementById(idFokus).focus();
@@ -3089,7 +3097,7 @@
       // Barang tanpa satuan besar: angkanya saja (dengan nama satuan bila denganSatuan = true).
       uraiStok(product, jumlah, denganSatuan) {
         const dasar = product.Satuan_Dasar || 'pcs';
-        const besar = (product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
+        const besar = satuanBesar(product);
         let sisa = Number(jumlah) || 0;
         if (besar.length === 0 || sisa <= 0) return denganSatuan ? sisa + ' ' + dasar : String(sisa);
         const bagian = [];
@@ -3784,7 +3792,7 @@
       // Satuan yang diisi saat menghitung: satuan besar dulu (mis. Slop isi 10), lalu satuan dasar.
       // Satuan berisi 1 (harga kedua untuk satuan yang sama) tidak perlu diisi terpisah.
       satuanHitung(product) {
-        const besar = (product.Satuan_Lain || []).filter(s => s.isi > 1).sort((a, b) => b.isi - a.isi);
+        const besar = satuanBesar(product);
         return besar.concat([{ nama: product.Satuan_Dasar || 'pcs', isi: 1 }]);
       },
       // Total hitungan fisik dalam satuan dasar; null bila barang ini belum diisi sama sekali
