@@ -1303,6 +1303,10 @@
                     <span v-if="isBackup" class="spinner-border spinner-border-sm me-1" role="status"></span>
                     <i v-else class="fas fa-download me-1"></i> Backup Data
                   </button>
+                  <button class="btn btn-sm btn-outline-dark" @click="$refs.berkas.click()" title="Pulihkan data dari file backup (.xlsx). Data saat ini disalin dulu ke Google Drive.">
+                    <i class="fas fa-upload me-1"></i> Pulihkan
+                  </button>
+                  <input type="file" ref="berkas" accept=".xlsx" class="d-none" aria-label="File backup untuk dipulihkan" @change="pilihFileRestore">
                   <button class="btn btn-sm btn-outline-dark" @click="printReport" title="Cetak Laporan / Simpan PDF">
                     <i class="fas fa-print me-1"></i> Cetak Laporan
                   </button>
@@ -1337,6 +1341,7 @@
                      <option>BATAL PENJUALAN</option>
                      <option>PENYESUAIAN</option>
                      <option>STOK OPNAME</option>
+                     <option>PEMULIHAN DATA</option>
                      <option>STOK AWAL</option>
                      <option>HAPUS</option>
                    </select>
@@ -3573,6 +3578,59 @@
       },
       printReport() {
         window.print();
+      },
+      // Restore: file backup (.xlsx) dibaca di browser, lalu server menimpa data dengan isinya
+      // (lihat restoreBackup di Code.js: file diperiksa dulu, data saat ini disalin dulu, pengguna & PIN tetap).
+      async pilihFileRestore(e) {
+        const file = e.target.files[0];
+        e.target.value = ''; // supaya file yang sama bisa dipilih lagi
+        if (!file) return;
+        try {
+          await muatSkrip(URL_XLSX);
+          const buku = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+          const sheets = buku.SheetNames.map(nama => ({ nama: nama, baris: XLSX.utils.sheet_to_json(buku.Sheets[nama], { header: 1, defval: '', raw: true }) }));
+          const jumlah = nama => {
+            const s = sheets.find(s => s.nama === nama);
+            return this.formatNumber(s ? Math.max(0, s.baris.length - 1) : 0);
+          };
+          if (!sheets.some(s => s.nama === 'Produk') || !sheets.some(s => s.nama === 'Transaksi')) {
+            throw new Error('Ini bukan file backup aplikasi kasir.');
+          }
+          const aman = teks => String(teks).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+          const { value, isConfirmed } = await Swal.fire({
+            title: 'Pulihkan data dari backup?',
+            icon: 'warning',
+            html: `<div class="text-start small">
+              <p class="mb-2"><strong>${aman(file.name)}</strong><br>${jumlah('Produk')} barang &bull; ${jumlah('Transaksi')} transaksi &bull; ${jumlah('Riwayat_Stok')} mutasi stok</p>
+              <ul class="ps-3 mb-2">
+                <li>Barang, stok, transaksi, pembelian, shift, kas, dan opname <strong>semua toko</strong> diganti dengan isi file ini.</li>
+                <li>Semua yang dicatat <strong>setelah</strong> backup ini dibuat hilang dari aplikasi.</li>
+                <li>Data saat ini disalin dulu ke Google Drive pemilik spreadsheet, jadi masih bisa dikembalikan.</li>
+                <li>Pengguna, PIN, dan daftar toko tidak berubah.</li>
+                <li>Lakukan saat semua kasir sedang tutup.</li>
+              </ul>
+              Ketik <strong>PULIHKAN</strong> untuk melanjutkan.
+            </div>`,
+            input: 'text',
+            inputAttributes: { autocomplete: 'off', autocapitalize: 'characters' },
+            inputValidator: v => v === 'PULIHKAN' ? undefined : 'Ketik PULIHKAN (huruf besar semua)',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Pulihkan Data',
+            cancelButtonText: 'Batal'
+          });
+          if (!isConfirmed) return;
+
+          Swal.fire({ title: 'Memulihkan data...', text: 'Jangan tutup halaman ini.', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
+          const res = await this.api('restoreBackup', { sheets: sheets }, value);
+          Swal.fire('Data dipulihkan', res.message, 'success');
+          this.loadProducts();
+          this.loadShift();
+          this.hitungOpnameMenunggu();
+          if (this.activeTab === 'laporan') this.loadLaporan(this.laporanSubTab);
+        } catch (err) {
+          this.gagal(err, 'Pemulihan gagal');
+        }
       },
       // Backup: seluruh database (semua sheet, semua toko) menjadi satu file Excel di perangkat ini
       async unduhBackup() {
