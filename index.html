@@ -924,7 +924,7 @@
           
           <div class="mb-4">
             <label class="form-label text-muted small fw-bold">PIN Anda</label>
-            <input type="password" class="form-control form-control-lg text-center" v-model="pinInput" placeholder="******" inputmode="numeric" maxlength="8" autocomplete="off" autofocus @keyup.enter="login">
+            <input type="password" class="form-control form-control-lg text-center" v-model="pinInput" placeholder="******" inputmode="numeric" maxlength="8" autocomplete="off" v-fokus @keyup.enter="login">
           </div>
           
           <button class="btn btn-primary w-100 py-2 fw-bold" :disabled="isLoggingIn" @click="login">
@@ -1861,7 +1861,7 @@
                 
                 <div class="mb-3">
                   <label class="form-label small fw-bold">Nama Produk <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" v-model="productForm.Nama_Produk" placeholder="Contoh: Aqua 600ml" required autofocus>
+                  <input type="text" class="form-control" v-model="productForm.Nama_Produk" placeholder="Contoh: Aqua 600ml" required v-fokus>
                 </div>
 
                 <div class="mb-3">
@@ -1992,7 +1992,7 @@
                 <div class="row g-2 mb-1">
                   <div class="col-7">
                     <label class="form-label small fw-bold">Jumlah Barang Masuk <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control form-control-lg fw-bold text-success" v-model.number="restockForm.qty" min="1" required autofocus>
+                    <input type="number" class="form-control form-control-lg fw-bold text-success" v-model.number="restockForm.qty" min="1" required v-fokus>
                   </div>
                   <div class="col-5">
                     <label class="form-label small fw-bold">Satuan</label>
@@ -2093,7 +2093,7 @@
                   </div>
                   <div class="col-md-5">
                     <label class="form-label small fw-bold">Nama Supplier / Agen <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" list="supplierList" v-model="purchaseForm.supplier" placeholder="Ketik nama supplier" required autofocus>
+                    <input type="text" class="form-control" list="supplierList" v-model="purchaseForm.supplier" placeholder="Ketik nama supplier" required v-fokus>
                     <datalist id="supplierList">
                       <option value="Agen Sembako Makmur">
                       <option value="Distributor Rokok Subur">
@@ -3899,7 +3899,12 @@
         if (setuju) this.loadProducts();
       }
     }
-  }).mount('#app')
+  })
+    // Pengganti atribut autofocus: browser memblokir autofocus di iframe lintas-asal (halaman Apps Script),
+    // dan mengabaikannya untuk isian yang baru muncul belakangan (modal).
+    // Ditunda sesaat: saat halaman pertama dimuat, #app masih tersembunyi (v-cloak) ketika hook ini jalan.
+    .directive('fokus', { mounted: el => setTimeout(() => el.focus()) })
+    .mount('#app')
 </script>
 
   </body>
