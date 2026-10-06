@@ -2339,8 +2339,41 @@
     if (temaSebelumCetak) terapkanTema(temaSebelumCetak);
   });
 
+  // --- Jembatan ke server untuk halaman di luar Apps Script (GitHub Pages) ---
+  // Iframe tersembunyi berisi halaman kecil dari Apps Script (jembatan_ di Code.js) yang meneruskan panggilan
+  // dengan google.script.run, saluran yang sama dengan halaman Apps Script biasa. Jalur doPost (fetch) tinggal
+  // cadangan bila jembatan tidak bisa dimuat: jawabannya bergelombang hilang di sisi Google (404 / HTML).
+  const idPanggilan = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+  const menungguJawaban = {}; // id panggilan -> penerima jawaban
+  const jembatan = !window.API_URL ? null : new Promise(selesai => {
+    const asalApi = new URL(window.API_URL, location.href).origin;
+    // Halaman jembatan disajikan Google dari subdomain googleusercontent.com (preview lokal: dari server lokal)
+    const dariJembatan = asal => /^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(asal) || (asal === asalApi && asalApi === location.origin);
+    const batas = setTimeout(() => {
+      console.warn('[server] jembatan tidak siap dalam 15 dtk; memakai jalur cadangan (doPost)');
+      selesai(null);
+    }, 15000);
+    window.addEventListener('message', e => {
+      const m = e.data;
+      if (!m || m.jembatan !== true || !dariJembatan(e.origin)) return;
+      if (m.siap) {
+        clearTimeout(batas);
+        selesai({ jendela: e.source, asal: e.origin });
+      } else if (menungguJawaban[m.id]) {
+        menungguJawaban[m.id](m);
+        delete menungguJawaban[m.id];
+      }
+    });
+    const bingkai = document.createElement('iframe');
+    bingkai.src = window.API_URL + '?jembatan=1';
+    bingkai.title = 'Penghubung server';
+    bingkai.setAttribute('aria-hidden', 'true');
+    bingkai.style.display = 'none';
+    document.body.appendChild(bingkai);
+  });
+
   // Panggil fungsi server (Code.js) sebagai Promise. Error dari server masuk ke catch.
-  // Di dalam Apps Script lewat google.script.run; di GitHub Pages lewat API doPost (window.API_URL).
+  // Di dalam Apps Script lewat google.script.run; di GitHub Pages lewat jembatan di atas (cadangan: doPost).
   async function server(fn, ...args) {
     const data = JSON.parse(JSON.stringify(args));
     // Lama tiap panggilan dicatat di console (tanpa isi datanya), untuk melacak bagian yang lambat
@@ -2357,9 +2390,26 @@
       });
     }
 
-    // Sebagian kecil jawaban hilang di sisi Google (404 / halaman HTML) walau perintahnya sudah dijalankan,
+    const id = idPanggilan();
+    const lewat = await jembatan;
+    if (lewat) {
+      const balasan = await new Promise((terima, tolak) => {
+        // Batas panjang: backup & restore bisa lama. Jawaban yang tidak kunjung datang tidak diulang otomatis,
+        // karena perintahnya mungkin sudah dijalankan.
+        const batas = setTimeout(() => {
+          delete menungguJawaban[id];
+          tolak(new Error('Server tidak menjawab. Periksa koneksi internet, lalu periksa hasilnya dulu sebelum mengulang.'));
+        }, 300000);
+        menungguJawaban[id] = m => { clearTimeout(batas); terima(m); };
+        lewat.jendela.postMessage({ jembatan: true, id: id, fn: fn, args: data }, lewat.asal);
+      });
+      catat();
+      if (!balasan.ok) throw new Error(balasan.error);
+      return balasan.result;
+    }
+
+    // Jalur cadangan (doPost). Sebagian jawaban hilang di sisi Google walau perintahnya sudah dijalankan,
     // jadi panggilan diulang dengan id yang sama; server menjalankannya hanya sekali per id (lihat doPost).
-    const id = window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
     const MAKS_COBA = 4;
     let jawaban;
     for (let coba = 1; !jawaban; coba++) {
