@@ -2357,13 +2357,21 @@
       });
     }
 
+    // Sebagian kecil jawaban hilang di sisi Google (404 / halaman HTML) walau perintahnya sudah dijalankan,
+    // jadi panggilan diulang dengan id yang sama; server menjalankannya hanya sekali per id (lihat doPost).
+    const id = window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+    const MAKS_COBA = 4;
     let jawaban;
-    try {
-      // Tanpa header tambahan: body teks biasa tidak memicu preflight CORS
-      const res = await fetch(window.API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, args: data }) });
-      jawaban = await res.json();
-    } catch (err) {
-      throw new Error('Tidak bisa menghubungi server. Periksa koneksi internet lalu coba lagi.');
+    for (let coba = 1; !jawaban; coba++) {
+      try {
+        // Tanpa header tambahan: body teks biasa tidak memicu preflight CORS
+        const res = await fetch(window.API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, args: data, id: id }) });
+        jawaban = await res.json();
+      } catch (err) {
+        console.warn('[server] ' + fn + ': jawaban tidak sampai (percobaan ' + coba + ' dari ' + MAKS_COBA + ')');
+        if (coba >= MAKS_COBA) throw new Error('Tidak bisa menghubungi server. Periksa koneksi internet lalu coba lagi.');
+        await new Promise(lanjut => setTimeout(lanjut, 400 * coba));
+      }
     }
     catat(jawaban.ms);
     if (!jawaban.ok) throw new Error(jawaban.error);
