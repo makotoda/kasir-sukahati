@@ -1435,6 +1435,26 @@
                      </div>
 
                      <div class="col-lg-6">
+                       <h6 class="fw-bold">Rekap pelanggan <span class="fw-normal text-muted small">({{ ringkasan.jumlahPelanggan || 0 }} pelanggan bernama pada filter ini; urut total belanja)</span></h6>
+                       <div style="max-height: 420px; overflow-y: auto;" class="tabel-gulir">
+                         <table class="table table-sm table-striped mb-0">
+                           <thead><tr><th>#</th><th>Pelanggan</th><th class="text-end">Belanja</th><th class="text-end">Total</th><th class="text-end">Rata-rata</th><th class="text-end">Terakhir</th></tr></thead>
+                           <tbody>
+                             <tr v-for="(c, i) in (ringkasan.perPelanggan || [])" :key="c.nama">
+                               <td class="text-muted">{{ i + 1 }}</td>
+                               <td class="fw-semibold">{{ c.nama }}</td>
+                               <td class="text-end">{{ c.transaksi }}&times;</td>
+                               <td class="text-end">Rp {{ formatNumber(c.omzet) }}</td>
+                               <td class="text-end text-muted">Rp {{ formatNumber(Math.round(c.omzet / c.transaksi)) }}</td>
+                               <td class="text-end text-muted text-nowrap">{{ c.terakhir }}</td>
+                             </tr>
+                             <tr v-if="!(ringkasan.perPelanggan || []).length"><td colspan="6" class="text-center text-muted py-3">Belum ada transaksi dengan nama pelanggan pada filter ini. Isi nama pelanggan di kasir (F3) saat menjual.</td></tr>
+                           </tbody>
+                         </table>
+                       </div>
+                     </div>
+
+                     <div class="col-lg-6">
                        <h6 class="fw-bold">Stok menipis / perlu dibeli <span class="fw-normal text-muted small">(stok saat ini &le; stok minimum)</span></h6>
                        <table class="table table-sm table-striped mb-2">
                          <thead><tr><th>Toko</th><th class="text-end">Jumlah barang menipis</th></tr></thead>
