@@ -7,9 +7,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha384-3B6NwesSXE7YJlcLI9RpRqGf2p/EgVH8BgoKTaUrmKNDkHPStTQ3EyoYjCGXaOTS" crossorigin="anonymous">
     
     <style>
   /* !important: tanpa ini aturan #app { display: flex } menang, dan kerangka mentah halaman
@@ -284,6 +284,19 @@
     transition-duration: 0.15s;
   }
   .product-card .card-title { font-weight: 600; color: var(--teks); }
+  /* Petunjuk di kotak cari kasir muat di kolom barang yang sempit */
+  .product-grid ~ * .form-control-lg::placeholder, .pos-card .card-header .form-control-lg::placeholder { font-size: 1rem; }
+  /* Nama barang sampai dua baris (dulu satu baris terpotong, sehingga "Larutan Cap Kaki 3 ..." tampil kembar) */
+  .nama-barang {
+    font-size: 0.82rem;
+    line-height: 1.22;
+    min-height: 2.44em;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
   .product-card .card-text {
     color: var(--teks) !important;
     font-size: 0.95rem !important;
@@ -375,6 +388,64 @@
     border-color: var(--aksen);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--aksen) 45%, transparent);
     transform: translateY(-2px);
+  }
+
+  /* Tabel di halaman Ringkasan: teks panjang turun baris, angka tidak pernah terpecah */
+  .tabel-ringkas { table-layout: auto; width: 100%; }
+  .report-print-area .table.tabel-ringkas > tbody > tr > td:not(.text-end):nth-child(n) { white-space: normal; overflow-wrap: anywhere; }
+  .tabel-ringkas td.text-end, .tabel-ringkas th.text-end { white-space: nowrap; overflow-wrap: normal; }
+
+  /* Bilah tab laporan: boleh turun baris, tabnya tidak memecah teks */
+  .segmen-laporan { flex-wrap: wrap; }
+  .segmen-laporan .btn { white-space: nowrap; }
+
+  /* Toast kabar berhasil */
+  .swal2-popup.swal2-toast { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28) !important; padding: 0.6em 1em !important; }
+  .swal2-popup.swal2-toast .swal2-title { font-size: 0.98rem !important; margin: 0.2em 0.6em 0 !important; }
+  .swal2-popup.swal2-toast .swal2-html-container { font-size: 0.86rem !important; margin: 0.1em 0.6em 0.2em !important; }
+
+  /* Keranjang di layar sempit (HP, tablet, laptop kecil): nama barang mendapat barisnya sendiri. Dalam satu
+     baris, nama terdesak satuan, harga, dan tombol jumlah sampai tinggal tiga huruf atau hilang sama sekali. */
+  @media screen and (max-width: 1199.98px) {
+    .baris-keranjang > .d-flex { flex-wrap: wrap; row-gap: 4px; }
+    .baris-keranjang > .d-flex > :first-child { flex: 1 1 100%; }
+    .baris-keranjang > .d-flex > .tabular { margin-left: auto; }
+  }
+
+  /* ===== LAYAR HP (di bawah 768px) =====
+     Daftar barang dan keranjang bertumpuk. Dulu wadahnya terkunci setinggi layar, sehingga keranjang dan
+     tombol bayar berada di luar layar dan tidak bisa dicapai. Sekarang wadah bisa digulung, dan ada bilah
+     keranjang yang selalu terlihat di bawah layar. */
+  .bilah-keranjang { display: none; }
+  @media screen and (max-width: 767.98px) {
+    .pos-container { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .kolom-keranjang { height: auto !important; }
+    .kolom-keranjang .pos-card { height: auto; }
+    .kolom-keranjang .keranjang-isi { flex: none; }
+    .kolom-keranjang .cart-container { flex: none; max-height: none; overflow: visible !important; }
+    .bilah-keranjang {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index: 1030;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--tombol-aksen);
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    /* Navbar: tombol menu tetap di baris yang sama dengan nama toko */
+    .navbar .container-fluid { flex-wrap: nowrap; row-gap: 0; }
+    .navbar .navbar-brand { font-size: 1rem; margin-right: 0.5rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .navbar .navbar-toggler { padding: 0.25rem 0.5rem; font-size: 1rem; margin-left: auto; flex-shrink: 0; }
+    .navbar .navbar-collapse { position: absolute; top: 100%; left: 0; right: 0; padding: 0.5rem 0.9rem 0.8rem; background: var(--permukaan); border-bottom: 1px solid var(--garis); z-index: 1040; }
   }
 
   /* Petunjuk pintasan keyboard di tombol; disembunyikan di layar sentuh */
@@ -966,7 +1037,7 @@
         </nav>
 
         <!-- Body Area -->
-        <div class="pos-container">
+        <div class="pos-container" ref="wadah" @scroll.passive="saatGulir">
           
           <!-- MODUL KASIR -->
           <div v-if="userRole !== 'karyawan'" v-show="activeTab === 'kasir'" class="h-100 modul" style="min-height: 0;">
@@ -975,7 +1046,7 @@
               <div class="col-md-6 col-lg-3 d-flex flex-column h-100" style="min-height: 0;">
                 <div class="card pos-card">
                   <div class="card-header border-bottom-0 pt-3 flex-shrink-0">
-                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan barang (F2)" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang. Panah bawah atau Tab: pilih dari daftar." v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch" @keydown.down.prevent="fokusKartu(0)" @keydown.up.prevent="fokusBarisKeranjang(0)">
+                    <input type="text" class="form-control form-control-lg" placeholder="🔍 Cari / scan (F2)" aria-label="Cari atau scan barang" title="Ketik nama atau kode barang (atau scan barcode), lalu Enter untuk memasukkan ke keranjang. Panah bawah atau Tab: pilih dari daftar." v-model="searchQuery" ref="cari" @keydown.enter.prevent="addFromSearch" @keydown.down.prevent="fokusKartu(0)" @keydown.up.prevent="fokusBarisKeranjang(0)">
                   </div>
                   <div class="card-body p-2 product-grid">
                     <div v-if="loading && products.length === 0" class="text-center py-5">
@@ -986,7 +1057,7 @@
                       <div class="col-6" v-for="(product, i) in filteredProducts" :key="product.ID_Produk" :style="{ '--i': Math.min(i, 24) }">
                         <div class="card h-100 product-card" :class="{'opacity-50': product.Stok_Tersedia <= 0 || product.Harga_Jual <= 0}" tabindex="0" role="button" :aria-label="'Masukkan ' + product.Nama_Produk + ' ke keranjang'" @click="addToCart(product)" @keydown.enter.prevent="addToCart(product)" @keydown.space.prevent="addToCart(product)" @keydown="navKartu($event, i)">
                           <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
-                            <h6 class="card-title text-truncate" :title="product.Nama_Produk" style="font-size: 0.85rem;">{{ product.Nama_Produk }}</h6>
+                            <h6 class="card-title nama-barang" :title="product.Nama_Produk">{{ product.Nama_Produk }}</h6>
                             <p class="card-text text-primary fw-bold mb-1" style="font-size: 0.9rem;">Rp {{ formatNumber(product.Harga_Jual) }}</p>
                             <small :class="menipis(product) ? 'text-danger fw-semibold' : 'text-muted'" style="font-size: 0.72rem;">Stok {{ uraiStok(product, product.Stok_Tersedia) }}</small>
                             <small v-if="product.Satuan_Lain && product.Satuan_Lain.length" class="text-muted text-truncate" style="font-size: 0.68rem;">+ {{ product.Satuan_Lain.map(s => s.nama).join(', ') }}</small>
@@ -999,11 +1070,12 @@
               </div>
               
               <!-- Keranjang Belanja -->
-              <div class="col-md-6 col-lg-9 d-flex flex-column h-100" style="min-height: 0;">
+              <div class="col-md-6 col-lg-9 d-flex flex-column h-100 kolom-keranjang" style="min-height: 0;" ref="keranjang">
                 <div class="card pos-card">
-                  <div class="card-header d-flex justify-content-between align-items-center flex-shrink-0 py-2">
+                  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 flex-shrink-0 py-2">
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                      <button class="btn btn-sm btn-outline-primary py-0 d-md-none" @click="keBarang"><i class="fas fa-plus me-1"></i>Barang</button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="openRiwayat" title="Transaksi shift ini: cetak ulang struk, batal, atau koreksi (F5)"><i class="fas fa-history me-1"></i>Riwayat<kbd class="pintasan">F5</kbd></button>
                       <button class="btn btn-sm btn-outline-secondary py-0 tombol-pintasan" @click="bantuanPintasan" title="Daftar pintasan keyboard (F1)"><i class="fas fa-keyboard"></i><kbd class="pintasan">F1</kbd></button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan (F6)"><i class="fas fa-money-bill-wave me-1"></i>Kas<kbd class="pintasan">F6</kbd></button>
@@ -1099,6 +1171,13 @@
             </div>
           </div>
 
+          <!-- Layar HP: daftar barang memenuhi layar dan keranjang ada di bawahnya, jadi bilah ini selalu
+               menunjukkan isi keranjang dan membawa kasir ke sana. Hilang saat keranjang sudah terlihat. -->
+          <button v-if="userRole !== 'karyawan' && activeTab === 'kasir' && cart.length > 0 && !keranjangTerlihat" type="button" class="bilah-keranjang d-md-none no-print" @click="keKeranjang">
+            <span><i class="fas fa-shopping-cart me-2"></i>{{ cart.length }} barang</span>
+            <span class="fw-bold">Rp {{ formatNumber(totalBelanja) }} <i class="fas fa-chevron-down ms-1"></i></span>
+          </button>
+
           <!-- MODUL STOK OPNAME (Karyawan): hitung buta, hasilnya menunggu persetujuan Admin -->
           <div v-if="userRole === 'karyawan'" v-show="activeTab === 'opname'" class="h-100 modul" style="min-height: 0;">
             <div class="card pos-card">
@@ -1185,6 +1264,10 @@
                     </select>
                   </div>
                 </div>
+                <div v-if="tampilSemuaToko || tokoTampil.length < daftarToko.length" class="small text-muted mt-2">
+                  <template v-if="!tampilSemuaToko">{{ daftarToko.length - tokoTampil.length }} toko tanpa stok disembunyikan.</template>
+                  <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="tampilSemuaToko = !tampilSemuaToko">{{ tampilSemuaToko ? 'Sembunyikan toko tanpa stok' : 'Tampilkan semua toko' }}</button>
+                </div>
               </div>
               <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
                  <div class="table-responsive">
@@ -1196,18 +1279,18 @@
                          <th>Kategori</th>
                          <th>H. Beli</th>
                          <th>H. Jual</th>
-                         <th class="text-center small" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}" :title="'Stok di ' + t.nama">{{ t.nama }}</th>
+                         <th class="text-center small" v-for="t in tokoTampil" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}" :title="'Stok di ' + t.nama">{{ t.nama }}</th>
                          <th class="text-center">Aksi</th>
                        </tr>
                      </thead>
                      <tbody>
                        <tr v-for="product in filteredInventoryProducts" :key="product.ID_Produk">
-                         <td class="ps-3 text-muted small">{{ product.ID_Produk }}</td>
+                         <td class="ps-3 text-muted small text-nowrap">{{ product.ID_Produk }}</td>
                          <td class="fw-bold">{{ product.Nama_Produk }}</td>
                          <td><span class="badge bg-secondary">{{ product.Kategori }}</span></td>
                          <td class="text-nowrap">Rp {{ formatNumber(product.Harga_Beli) }}</td>
                          <td class="text-primary fw-bold text-nowrap">Rp {{ formatNumber(product.Harga_Jual) }}</td>
-                         <td class="text-center" v-for="t in daftarToko" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}">
+                         <td class="text-center" v-for="t in tokoTampil" :key="t.kode" :class="{'table-primary': t.kode === toko.kode}">
                             <span class="badge rounded-pill" :class="product.Stok[t.kode] > product.Stok_Minimum ? 'bg-success' : 'bg-danger'" :title="'Stok minimum: ' + product.Stok_Minimum">
                                {{ uraiStok(product, product.Stok[t.kode]) }}
                             </span>
@@ -1220,7 +1303,7 @@
                          </td>
                        </tr>
                        <tr v-if="filteredInventoryProducts.length === 0">
-                         <td :colspan="6 + daftarToko.length" class="text-center py-4 text-muted">
+                         <td :colspan="6 + tokoTampil.length" class="text-center py-4 text-muted">
                            <i class="fas fa-search me-1"></i> Tidak ada produk yang sesuai dengan pencarian / filter kategori.
                          </td>
                        </tr>
@@ -1274,8 +1357,8 @@
           <!-- MODUL LAPORAN (Khusus Admin) -->
           <div v-if="userRole === 'admin'" v-show="activeTab === 'laporan'" class="h-100 modul" style="min-height: 0;">
             <div class="card pos-card">
-              <div class="card-header py-2 flex-shrink-0 d-flex justify-content-between align-items-center no-print">
-                <div class="btn-group btn-group-sm segmen">
+              <div class="card-header py-2 flex-shrink-0 d-flex flex-wrap justify-content-between align-items-center gap-2 no-print">
+                <div class="btn-group btn-group-sm segmen segmen-laporan">
                   <button class="btn" :class="laporanSubTab === 'ringkasan' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('ringkasan')">
                     <i class="fas fa-chart-line me-1"></i> Ringkasan
                   </button>
@@ -1283,32 +1366,32 @@
                     <i class="fas fa-receipt me-1"></i> Penjualan
                   </button>
                   <button class="btn" :class="laporanSubTab === 'pembelian' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('pembelian')">
-                    <i class="fas fa-truck-loading me-1"></i> Pembelian (Kulakan)
+                    <i class="fas fa-truck-loading me-1"></i> Pembelian
                   </button>
                   <button class="btn" :class="laporanSubTab === 'mutasi' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('mutasi')">
-                    <i class="fas fa-history me-1"></i> Audit Mutasi Stok
+                    <i class="fas fa-history me-1"></i> Mutasi Stok
                   </button>
                   <button class="btn" :class="laporanSubTab === 'shift' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('shift')">
-                    <i class="fas fa-cash-register me-1"></i> Tutup Kasir
+                    <i class="fas fa-cash-register me-1"></i> Shift
                   </button>
                   <button class="btn" :class="laporanSubTab === 'kas' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('kas')">
                     <i class="fas fa-money-bill-wave me-1"></i> Kas
                   </button>
                   <button class="btn" :class="laporanSubTab === 'opname' ? 'btn-primary' : 'btn-outline-primary'" @click="loadLaporan('opname')">
-                    <i class="fas fa-clipboard-check me-1"></i> Stok Opname <span v-if="opnameMenunggu" class="badge bg-warning text-dark rounded-pill">{{ opnameMenunggu }}</span>
+                    <i class="fas fa-clipboard-check me-1"></i> Opname <span v-if="opnameMenunggu" class="badge bg-warning text-dark rounded-pill">{{ opnameMenunggu }}</span>
                   </button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <button class="btn btn-sm btn-outline-dark" @click="unduhBackup" :disabled="isBackup" title="Unduh seluruh data (semua toko, semua riwayat) sebagai satu file Excel">
                     <span v-if="isBackup" class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    <i v-else class="fas fa-download me-1"></i> Backup Data
+                    <i v-else class="fas fa-download me-1"></i> Backup
                   </button>
                   <button class="btn btn-sm btn-outline-dark" @click="$refs.berkas.click()" title="Pulihkan data dari file backup (.xlsx). Data saat ini disalin dulu ke Google Drive.">
                     <i class="fas fa-upload me-1"></i> Pulihkan
                   </button>
                   <input type="file" ref="berkas" accept=".xlsx" class="d-none" aria-label="File backup untuk dipulihkan" @change="pilihFileRestore">
                   <button class="btn btn-sm btn-outline-dark" @click="printReport" title="Cetak Laporan / Simpan PDF">
-                    <i class="fas fa-print me-1"></i> Cetak Laporan
+                    <i class="fas fa-print me-1"></i> Cetak
                   </button>
                   <button class="btn btn-sm btn-outline-secondary" @click="loadLaporan(laporanSubTab)" title="Refresh Data">
                     <i class="fas fa-sync-alt"></i>
@@ -1375,7 +1458,7 @@
                    <div class="row g-3">
                      <div class="col-lg-6">
                        <h6 class="fw-bold">Omzet per hari <span class="fw-normal text-muted small">(31 hari terbaru pada filter)</span></h6>
-                       <table class="table table-sm table-striped mb-0">
+                       <table class="table table-sm table-striped tabel-ringkas mb-0">
                          <thead><tr><th>Tanggal</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th><th class="text-end">Laba kotor</th></tr></thead>
                          <tbody>
                            <tr v-for="h in ringkasan.perHari" :key="h.kunci">
@@ -1391,7 +1474,7 @@
 
                      <div class="col-lg-6">
                        <h6 class="fw-bold">Omzet per toko</h6>
-                       <table class="table table-sm table-striped mb-3">
+                       <table class="table table-sm table-striped tabel-ringkas mb-3">
                          <thead><tr><th>Toko</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th><th class="text-end">Laba kotor</th></tr></thead>
                          <tbody>
                            <tr v-for="t in ringkasan.perToko" :key="t.kunci">
@@ -1405,7 +1488,7 @@
                        </table>
 
                        <h6 class="fw-bold">Omzet per metode bayar</h6>
-                       <table class="table table-sm table-striped mb-0">
+                       <table class="table table-sm table-striped tabel-ringkas mb-0">
                          <thead><tr><th>Metode</th><th class="text-end">Transaksi</th><th class="text-end">Omzet</th></tr></thead>
                          <tbody>
                            <tr v-for="m in ringkasan.perMetode" :key="m.kunci">
@@ -1420,7 +1503,7 @@
 
                      <div class="col-lg-6">
                        <h6 class="fw-bold">Barang terlaris <span class="fw-normal text-muted small">(10 teratas menurut jumlah terjual)</span></h6>
-                       <table class="table table-sm table-striped mb-0">
+                       <table class="table table-sm table-striped tabel-ringkas mb-0">
                          <thead><tr><th>#</th><th>Barang</th><th class="text-end">Terjual</th><th class="text-end">Omzet</th></tr></thead>
                          <tbody>
                            <tr v-for="(b, i) in ringkasan.terlaris" :key="b.id_produk">
@@ -1435,9 +1518,9 @@
                      </div>
 
                      <div class="col-lg-6">
-                       <h6 class="fw-bold">Rekap pelanggan <span class="fw-normal text-muted small">({{ ringkasan.jumlahPelanggan || 0 }} pelanggan bernama pada filter ini; urut total belanja)</span></h6>
+                       <h6 class="fw-bold">Rekap pelanggan <span class="fw-normal text-muted small">({{ ringkasan.jumlahPelanggan || 0 }} pelanggan; urut total belanja)</span></h6>
                        <div style="max-height: 420px; overflow-y: auto;" class="tabel-gulir">
-                         <table class="table table-sm table-striped mb-0">
+                         <table class="table table-sm table-striped tabel-ringkas mb-0">
                            <thead><tr><th>#</th><th>Pelanggan</th><th class="text-end">Belanja</th><th class="text-end">Total</th><th class="text-end">Rata-rata</th><th class="text-end">Terakhir</th></tr></thead>
                            <tbody>
                              <tr v-for="(c, i) in (ringkasan.perPelanggan || [])" :key="c.nama">
@@ -1446,7 +1529,7 @@
                                <td class="text-end">{{ c.transaksi }}&times;</td>
                                <td class="text-end">Rp {{ formatNumber(c.omzet) }}</td>
                                <td class="text-end text-muted">Rp {{ formatNumber(Math.round(c.omzet / c.transaksi)) }}</td>
-                               <td class="text-end text-muted text-nowrap">{{ c.terakhir }}</td>
+                               <td class="text-end text-muted text-nowrap">{{ formatTanggal(c.terakhir) }}</td>
                              </tr>
                              <tr v-if="!(ringkasan.perPelanggan || []).length"><td colspan="6" class="text-center text-muted py-3">Belum ada transaksi dengan nama pelanggan pada filter ini. Isi nama pelanggan di kasir (F3) saat menjual.</td></tr>
                            </tbody>
@@ -1456,7 +1539,7 @@
 
                      <div class="col-lg-6">
                        <h6 class="fw-bold">Stok menipis / perlu dibeli <span class="fw-normal text-muted small">(stok saat ini &le; stok minimum)</span></h6>
-                       <table class="table table-sm table-striped mb-2">
+                       <table class="table table-sm table-striped tabel-ringkas mb-2">
                          <thead><tr><th>Toko</th><th class="text-end">Jumlah barang menipis</th></tr></thead>
                          <tbody>
                            <tr v-for="t in tokoLaporan" :key="t.kode">
@@ -1466,7 +1549,7 @@
                          </tbody>
                        </table>
                        <div v-if="!laporanFilter.cabang" class="small text-muted"><i class="fas fa-info-circle me-1"></i>Pilih satu toko di filter untuk melihat daftar barangnya.</div>
-                       <table v-else class="table table-sm table-striped mb-0">
+                       <table v-else class="table table-sm table-striped tabel-ringkas mb-0">
                          <thead><tr><th>Barang</th><th>Kategori</th><th class="text-end">Stok</th><th class="text-end">Minimum</th></tr></thead>
                          <tbody>
                            <tr v-for="s in stokMenipis" :key="s.id">
@@ -2330,9 +2413,9 @@
     </div>
 
     <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3.5.43/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue@3.5.43/dist/vue.global.prod.js" integrity="sha384-EAm39cvdifYiZjQQxCxStLasDodQMYokBrN5XPuJ7aC/JsQ4vyEUCy/+6hXpcBOW" crossorigin="anonymous"></script>
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.all.min.js" integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2" crossorigin="anonymous"></script>
     
     <script>
   const { createApp } = Vue;
@@ -2373,18 +2456,32 @@
       console.warn('[server] jembatan tidak siap dalam 15 dtk; memakai jalur cadangan (doPost)');
       selesai(null);
     }, 15000);
+    const bingkai = document.createElement('iframe');
+    // Pengirim harus berada DI DALAM bingkai jembatan yang dibuat halaman ini. Tanpa pemeriksaan ini, halaman
+    // lain di googleusercontent.com (siapa pun bisa membuatnya lewat Apps Script) yang membuka aplikasi ini di
+    // jendela baru bisa lebih dulu mengaku sebagai jembatan, lalu menerima PIN dan token yang dikirim ke server.
+    const dalamBingkai = w => {
+      for (let i = 0; w && i < 8; i++) {
+        if (w === bingkai.contentWindow) return true;
+        if (w === w.parent) break;
+        w = w.parent;
+      }
+      return false;
+    };
+    let terpilih = null; // jendela jembatan yang dipakai; jawaban hanya diterima darinya
     window.addEventListener('message', e => {
       const m = e.data;
-      if (!m || m.jembatan !== true || !dariJembatan(e.origin)) return;
+      if (!m || m.jembatan !== true || !dariJembatan(e.origin) || !dalamBingkai(e.source)) return;
       if (m.siap) {
+        if (terpilih) return;
+        terpilih = e.source;
         clearTimeout(batas);
         selesai({ jendela: e.source, asal: e.origin });
-      } else if (menungguJawaban[m.id]) {
+      } else if (e.source === terpilih && menungguJawaban[m.id]) {
         menungguJawaban[m.id](m);
         delete menungguJawaban[m.id];
       }
     });
-    const bingkai = document.createElement('iframe');
     bingkai.src = window.API_URL + '?jembatan=1';
     bingkai.title = 'Penghubung server';
     bingkai.setAttribute('aria-hidden', 'true');
@@ -2458,11 +2555,14 @@
 
   // Pembuat file Excel hanya dimuat saat Admin mengunduh backup
   const URL_XLSX = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.mini.min.js';
+  const SRI_XLSX = 'sha384-6fBkVFQw1YKyYpZpKf7bguegzeJqso45fTePEWGNuVaGy70fxEhICA/yswrPjW4+';
   function muatSkrip(src) {
     if (window.XLSX) return Promise.resolve();
     return new Promise((selesai, gagal) => {
       const s = document.createElement('script');
       s.src = src;
+      s.integrity = SRI_XLSX; // file yang isinya berubah ditolak browser
+      s.crossOrigin = 'anonymous';
       s.onload = selesai;
       s.onerror = () => gagal(new Error('Gagal memuat pembuat file Excel. Periksa koneksi internet lalu coba lagi.'));
       document.head.appendChild(s);
@@ -2531,7 +2631,9 @@
         cart: [],
         namaPelanggan: '',
         metodePembayaran: 'Tunai',
-        jumlahBayar: 0,
+        jumlahBayar: '',
+        tampilSemuaToko: false,   // tabel inventori: tampilkan juga toko yang tidak punya stok
+        keranjangTerlihat: false, // layar HP: keranjang sedang terlihat (bilah "lihat keranjang" disembunyikan)
         isProcessing: false,
 
         // Struk Belanja / Receipt State
@@ -2734,6 +2836,12 @@
       opnameBisaDipilih() {
         return this.opnameList.filter(o => o.Status === 'MENUNGGU');
       },
+      // Kolom stok di tabel inventori: toko aktif + toko yang punya stok. Toko yang belum dipakai
+      // (semua stoknya 0) disembunyikan supaya tabel tidak melebar; bisa ditampilkan lewat tombolnya.
+      tokoTampil() {
+        if (this.tampilSemuaToko) return this.daftarToko;
+        return this.daftarToko.filter(t => t.kode === this.toko.kode || this.products.some(p => p.Stok && p.Stok[t.kode] > 0));
+      },
       canCheckout() {
         if (!this.shift || this.cart.length === 0) return false;
         if (this.metodePembayaran === 'Tunai' && this.kembalian < 0) return false;
@@ -2792,11 +2900,18 @@
           throw err;
         }
       },
-      gagal(err, judul) {
-        Swal.fire(judul || 'Gagal', String((err && err.message) || err).replace(/^Error:\s*/, ''), 'error');
+      // Dialog pesan. Selalu lewat titleText/text: bentuk singkat Swal.fire(judul, isi, ikon) merender isinya
+      // sebagai HTML, padahal isinya bisa memuat nama barang, satuan, atau pesan dari server.
+      pesan(judul, teks, ikon) {
+        return Swal.fire({ titleText: judul, text: teks, icon: ikon });
       },
+      gagal(err, judul) {
+        this.pesan(judul || 'Gagal', String((err && err.message) || err).replace(/^Error:\s*/, ''), 'error');
+      },
+      // Kabar berhasil tampil sebagai toast di atas layar: tidak menutupi layar dan tidak menahan keyboard,
+      // jadi kasir bisa langsung lanjut bekerja.
       sukses(judul, pesan) {
-        Swal.fire({ title: judul, text: pesan, icon: 'success', timer: 1500, showConfirmButton: false });
+        Swal.fire({ toast: true, position: 'top', icon: 'success', titleText: judul, text: pesan, timer: 3000, timerProgressBar: true, showConfirmButton: false });
       },
 
       gantiTema() {
@@ -2865,7 +2980,7 @@
         this.token = '';
         this.products = [];
         this.cart = [];
-        this.jumlahBayar = 0;
+        this.jumlahBayar = '';
         this.shift = null;
         this.shiftDimuat = false;
         this.koreksi = null;
@@ -2905,7 +3020,7 @@
         this.toko = this.daftarToko.find(t => t.kode === kode) || this.toko;
         this.cart = [];
         this.koreksi = null;
-        this.jumlahBayar = 0;
+        this.jumlahBayar = '';
         this.loadProducts();
         this.loadShift();
       },
@@ -2972,7 +3087,7 @@
 
         try {
           const res = await this.api('voidTransaction', trx.ID_Transaksi, alasan);
-          if (res.peringatan) Swal.fire('Dibatalkan', res.message, 'warning');
+          if (res.peringatan) this.pesan('Dibatalkan', res.message, 'warning');
           else this.sukses('Dibatalkan', res.message);
           if (this.activeTab === 'laporan') this.loadLaporan('transaksi');
           if (this.showRiwayatModal) this.loadRiwayat();
@@ -3046,7 +3161,7 @@
       },
       async bukaKasir() {
         const { value, isConfirmed } = await Swal.fire({
-          title: 'Buka Kasir ' + this.toko.nama,
+          titleText: 'Buka Kasir ' + this.toko.nama,
           input: 'number',
           inputLabel: 'Modal awal: uang di laci saat ini (Rp)',
           inputValue: 0,
@@ -3112,7 +3227,7 @@
       // Uang seharusnya baru ditampilkan setelah kasir memasukkan hasil hitung fisiknya
       async tutupKasir() {
         const form = await Swal.fire({
-          title: 'Tutup Kasir ' + this.toko.nama,
+          titleText: 'Tutup Kasir ' + this.toko.nama,
           html: `<p class="small text-muted mb-3">Dibuka ${this.formatDate(this.shift.waktuBuka)} &bull; Modal awal Rp ${this.formatNumber(this.shift.modalAwal)}</p>
                  <label class="form-label small fw-bold" for="kasFisik">Uang fisik di laci sekarang (Rp)</label>
                  <input id="kasFisik" type="number" min="0" step="1" class="form-control form-control-lg text-center mb-3">
@@ -3234,7 +3349,7 @@
           }
           return;
         }
-        if (this.activeTab !== 'kasir' || Swal.isVisible()) return;
+        if (this.activeTab !== 'kasir' || (Swal.isVisible() && !Swal.getPopup().classList.contains('swal2-toast'))) return;
         if (this.showRiwayatModal) {
           if (e.key === 'Escape') {
             e.preventDefault();
@@ -3373,6 +3488,17 @@
         }
       },
 
+      // Layar HP: daftar barang dan keranjang bertumpuk, jadi ada bilah untuk melompat di antaranya
+      keKeranjang() {
+        if (this.$refs.keranjang) this.$refs.keranjang.scrollIntoView({ block: 'start' });
+      },
+      keBarang() {
+        if (this.$refs.wadah) this.$refs.wadah.scrollTop = 0;
+      },
+      saatGulir() {
+        const k = this.$refs.keranjang;
+        this.keranjangTerlihat = !!k && k.getBoundingClientRect().top < window.innerHeight - 140;
+      },
       // Stok yang bisa dijual: stok toko + barang yang akan kembali dari transaksi yang sedang dikoreksi
       stokJual(product) {
         return product.Stok_Tersedia + ((this.koreksi && this.koreksi.kembali[product.ID_Produk]) || 0);
@@ -3402,11 +3528,11 @@
       addToCart(product) {
         const satuan = this.satuanBarang(product).find(s => s.harga > 0);
         if (!satuan) {
-          Swal.fire('Oopss', 'Harga jual barang ini belum diisi!', 'warning');
+          this.pesan('Oopss', 'Harga jual barang ini belum diisi!', 'warning');
           return;
         }
         if (this.stokJual(product) <= 0) {
-          Swal.fire('Oopss', 'Stok barang ini habis!', 'warning');
+          this.pesan('Oopss', 'Stok barang ini habis!', 'warning');
           return;
         }
 
@@ -3432,7 +3558,7 @@
         const satuan = this.pilihanSatuan(item).find(s => s.nama === nama);
         if (!satuan) return;
         if (satuan.harga <= 0) {
-          Swal.fire('Oopss', `Harga jual per ${satuan.nama} belum diisi!`, 'warning');
+          this.pesan('Oopss', `Harga jual per ${satuan.nama} belum diisi!`, 'warning');
           return;
         }
         const lain = this.cart.find(x => x !== item && x.id_produk === item.id_produk && x.satuan === satuan.nama);
@@ -3480,7 +3606,7 @@
         }
         if (qtyVal > maks) {
           qtyVal = maks;
-          Swal.fire('Stok Terbatas', maks > 0
+          this.pesan('Stok Terbatas', maks > 0
             ? `Maksimal ${maks} ${item.satuan} (stok ${this.stokJual(product)} ${product.Satuan_Dasar})`
             : `Stok tidak cukup untuk 1 ${item.satuan}`, 'warning');
         }
@@ -3536,7 +3662,7 @@
           this.koreksi = null;
           this.searchQuery = '';
           this.cart = [];
-          this.jumlahBayar = 0;
+          this.jumlahBayar = '';
           this.namaPelanggan = '';
         } catch (err) {
           this.gagal(err, 'Transaksi Gagal');
@@ -3635,10 +3761,10 @@
           [...this.cart].forEach(item => this.validateCartQty(item));
           this.namaPelanggan = struk.pelanggan;
           this.metodePembayaran = struk.metode_pembayaran;
-          this.jumlahBayar = 0;
+          this.jumlahBayar = '';
           this.showRiwayatModal = false;
           this.activeTab = 'kasir';
-          if (hilang.length) Swal.fire('Perhatian', 'Barang berikut sudah tidak bisa dijual dan tidak dimuat: ' + hilang.join(', '), 'warning');
+          if (hilang.length) this.pesan('Perhatian', 'Barang berikut sudah tidak bisa dijual dan tidak dimuat: ' + hilang.join(', '), 'warning');
         } catch (err) {
           this.koreksi = null;
           this.gagal(err, 'Tidak bisa dikoreksi');
@@ -3648,7 +3774,7 @@
         this.koreksi = null;
         this.cart = [];
         this.namaPelanggan = '';
-        this.jumlahBayar = 0;
+        this.jumlahBayar = '';
         this.loadProducts();
       },
       printReceipt() {
@@ -3701,7 +3827,7 @@
 
           Swal.fire({ title: 'Memulihkan data...', text: 'Jangan tutup halaman ini.', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
           const res = await this.api('restoreBackup', { sheets: sheets }, value);
-          Swal.fire('Data dipulihkan', res.message, 'success');
+          this.pesan('Data dipulihkan', res.message, 'success');
           this.loadProducts();
           this.loadShift();
           this.hitungOpnameMenunggu();
@@ -3721,7 +3847,7 @@
           const nama = 'backup-kasir-sukahati-' + data.waktu.replace(/[: ]/g, '-') + '.xlsx';
           XLSX.writeFile(buku, nama);
           const baris = data.sheets.reduce((n, s) => n + Math.max(0, s.baris.length - 1), 0);
-          Swal.fire('Backup diunduh', `${nama} berisi ${data.sheets.length} sheet (${this.formatNumber(baris)} baris data). Simpan di tempat aman. PIN pengguna tidak ikut di dalam file.`, 'success');
+          this.pesan('Backup diunduh', `${nama} berisi ${data.sheets.length} sheet (${this.formatNumber(baris)} baris data). Simpan di tempat aman. PIN pengguna tidak ikut di dalam file.`, 'success');
         } catch (err) {
           this.gagal(err, 'Backup gagal');
         } finally {
@@ -3765,11 +3891,11 @@
       },
       async saveProductSubmit() {
         if (!this.productForm.Nama_Produk) {
-          Swal.fire('Peringatan', 'Nama barang wajib diisi!', 'warning');
+          this.pesan('Peringatan', 'Nama barang wajib diisi!', 'warning');
           return;
         }
         if (this.productForm.Harga_Jual <= 0) {
-          Swal.fire('Peringatan', 'Harga jual harus lebih dari 0!', 'warning');
+          this.pesan('Peringatan', 'Harga jual harus lebih dari 0!', 'warning');
           return;
         }
 
@@ -3827,7 +3953,7 @@
       },
       async submitRestock() {
         if (!(this.restockForm.qty > 0)) {
-          Swal.fire('Peringatan', 'Jumlah stok masuk harus minimal 1!', 'warning');
+          this.pesan('Peringatan', 'Jumlah stok masuk harus minimal 1!', 'warning');
           return;
         }
 
@@ -3946,11 +4072,11 @@
       },
       async submitPurchaseInvoice() {
         if (this.purchaseForm.items.length === 0) {
-          Swal.fire('Peringatan', 'Daftar barang pada faktur masih kosong!', 'warning');
+          this.pesan('Peringatan', 'Daftar barang pada faktur masih kosong!', 'warning');
           return;
         }
         if (!this.purchaseForm.supplier) {
-          Swal.fire('Peringatan', 'Nama supplier/agen wajib diisi!', 'warning');
+          this.pesan('Peringatan', 'Nama supplier/agen wajib diisi!', 'warning');
           return;
         }
 
@@ -4097,7 +4223,7 @@
     // Pengganti atribut autofocus: browser memblokir autofocus di iframe lintas-asal (halaman Apps Script),
     // dan mengabaikannya untuk isian yang baru muncul belakangan (modal).
     // Ditunda sesaat: saat halaman pertama dimuat, #app masih tersembunyi (v-cloak) ketika hook ini jalan.
-    .directive('fokus', { mounted: el => setTimeout(() => el.focus()) })
+    .directive('fokus', { mounted: el => setTimeout(() => el.focus({ preventScroll: true })) })
     .mount('#app')
 </script>
 
