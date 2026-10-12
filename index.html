@@ -1089,7 +1089,7 @@
                     <h5 class="mb-0 fs-6"><i class="fas fa-shopping-cart me-1"></i> Keranjang</h5>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                       <button class="btn btn-sm btn-outline-primary py-0 d-md-none" @click="keBarang"><i class="fas fa-plus me-1"></i>Barang</button>
-                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="openRiwayat" title="Transaksi shift ini: cetak ulang struk, batal, atau koreksi (F5)"><i class="fas fa-history me-1"></i>Riwayat<kbd class="pintasan">F5</kbd></button>
+                      <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="openRiwayat" title="Transaksi hari ini: cetak ulang struk, batal, atau koreksi (F5)"><i class="fas fa-history me-1"></i>Riwayat<kbd class="pintasan">F5</kbd></button>
                       <button class="btn btn-sm btn-outline-secondary py-0 tombol-pintasan" @click="bantuanPintasan" title="Daftar pintasan keyboard (F1)"><i class="fas fa-keyboard"></i><kbd class="pintasan">F1</kbd></button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="catatKas" title="Catat uang masuk/keluar laci di luar penjualan (F6)"><i class="fas fa-money-bill-wave me-1"></i>Kas<kbd class="pintasan">F6</kbd></button>
                       <button v-if="shift" class="btn btn-sm btn-outline-secondary py-0" @click="tutupKasir" title="Hitung uang di laci lalu tutup kasir (F10)"><i class="fas fa-lock me-1"></i>Tutup Kasir<kbd class="pintasan">F10</kbd></button>
@@ -1626,7 +1626,7 @@
                            <div class="d-flex flex-wrap gap-2 mt-2 no-print">
                              <button class="btn btn-sm btn-outline-secondary" @click="cetakUlang(trx.ID_Transaksi)"><i class="fas fa-print me-1"></i> Cetak Ulang Struk</button>
                              <template v-if="trx.Status !== 'BATAL'">
-                               <button class="btn btn-sm btn-outline-primary" @click="mulaiKoreksi(trx.ID_Transaksi)" title="Hanya untuk transaksi di shift kasir yang masih buka"><i class="fas fa-pen me-1"></i> Koreksi</button>
+                               <button class="btn btn-sm btn-outline-primary" @click="mulaiKoreksi(trx.ID_Transaksi)" title="Hanya untuk transaksi hari ini; bisa dikoreksi berkali-kali"><i class="fas fa-pen me-1"></i> Koreksi</button>
                                <button class="btn btn-sm btn-outline-danger" @click="batalkanTransaksi(trx)"><i class="fas fa-ban me-1"></i> Batalkan Transaksi</button>
                              </template>
                            </div>
@@ -1866,14 +1866,14 @@
         </div>
       </div>
 
-      <!-- MODAL RIWAYAT TRANSAKSI SHIFT BERJALAN (kasir): cetak ulang, batal, koreksi -->
+      <!-- MODAL RIWAYAT TRANSAKSI HARI INI (kasir): cetak ulang, batal, koreksi -->
       <transition name="sheet" :duration="{ enter: 550, leave: 300 }">
       <div v-if="showRiwayatModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5); z-index: 1050;" ref="riwayat">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
           <div class="modal-content border-0" style="border-radius: 12px; overflow: hidden;">
             <div class="modal-header py-3">
               <div>
-                <h5 class="modal-title fw-bold"><i class="fas fa-history me-2"></i>Transaksi Shift Ini</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-history me-2"></i>Transaksi Hari Ini</h5>
                 <div class="small text-muted">{{ toko.nama }} &bull; kasir dibuka {{ shift ? formatDate(shift.waktuBuka) : '-' }}</div>
               </div>
               <button type="button" class="btn-close" @click="showRiwayatModal = false"></button>
@@ -1901,11 +1901,11 @@
                     </div>
                   </div>
                 </li>
-                <li v-if="riwayatShift.length === 0" class="list-group-item text-center text-muted py-4">Belum ada transaksi di shift ini.</li>
+                <li v-if="riwayatShift.length === 0" class="list-group-item text-center text-muted py-4">Belum ada transaksi hari ini.</li>
               </ul>
             </div>
             <div class="modal-footer bg-body-tertiary py-2 small text-muted justify-content-start">
-              Batal &amp; koreksi hanya untuk shift yang sedang berjalan. Transaksi sebelumnya: minta Admin.
+              Transaksi hari ini bisa dikoreksi berkali-kali atau dibatalkan. Transaksi hari sebelumnya: minta Admin.
             </div>
           </div>
         </div>
@@ -3418,7 +3418,7 @@
           ['F8', 'Uang pas'],
           ['F9', 'Bayar (atau Buka Kasir bila belum dibuka)'],
           ['Enter / P', 'Saat struk tampil: transaksi baru / cetak struk'],
-          ['F5', 'Riwayat transaksi shift ini: cetak ulang, koreksi, batal (Tab untuk pindah, Esc menutup)'],
+          ['F5', 'Riwayat transaksi hari ini: cetak ulang, koreksi, batal (Tab untuk pindah, Esc menutup)'],
           ['F6', 'Kas masuk/keluar'],
           ['F10', 'Tutup kasir'],
           ['Esc', 'Kembali ke kotak cari / tutup dialog'],
@@ -3672,6 +3672,7 @@
             if (p.Stok) p.Stok[this.toko.kode] += ubah[p.ID_Produk];
           });
           this.showReceiptModal = true;
+          if (res.kasKeluar) this.sukses('Kas keluar dicatat', `Uang transaksi lama (Rp ${this.formatNumber(res.kasKeluar)}) dari shift sebelumnya dicatat sebagai Kas Keluar di shift ini.`);
           this.koreksi = null;
           this.searchQuery = '';
           this.cart = [];
@@ -3755,8 +3756,9 @@
             this.loadProducts();
             await this.loadShift();
           }
-          if (!this.shift || this.shift.id !== struk.idShift) {
-            throw new Error('Koreksi hanya untuk transaksi di shift kasir yang sedang berjalan. Untuk transaksi lama, batalkan lalu input ulang.');
+          if (!this.shift) throw new Error('Kasir belum dibuka. Buka kasir dulu, lalu koreksi transaksinya.');
+          if (!struk.hariIni && this.shift.id !== struk.idShift) {
+            throw new Error('Koreksi hanya untuk transaksi hari ini. Untuk transaksi lama, batalkan lalu input ulang.');
           }
           const kembali = {};
           struk.cart.forEach(it => { kembali[it.id_produk] = (kembali[it.id_produk] || 0) + it.qty * it.isi; });
