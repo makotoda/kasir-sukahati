@@ -851,12 +851,13 @@
     border: 1px dashed #d1d1d6;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   }
+  .receipt-box { line-height: 1.1; }
   .receipt-divider {
     border-top: 1px dashed #8e8e93;
-    margin: 8px 0;
+    margin: 4px 0;
   }
   .receipt-table td {
-    padding: 3px 0;
+    padding: 1px 0;
     vertical-align: top;
   }
 
@@ -989,6 +990,11 @@
     .receipt-print-area [style*="font-size: 13px"] { font-size: 15px !important; }
     .receipt-print-area [style*="font-size: 16px"] { font-size: 18px !important; }
     .receipt-print-area .receipt-divider { border-top: 2px dashed #000; }
+    /* Rapat: jarak antar baris sekecil mungkin (hemat kertas thermal) */
+    .receipt-print-area, .receipt-print-area * { line-height: 1 !important; }
+    .receipt-print-area .receipt-divider { margin: 2px 0 !important; }
+    .receipt-print-area .receipt-table td { padding: 0 !important; }
+    .receipt-print-area :is(.mb-0, .mb-1, .mb-2, .mt-1, .mt-2) { margin-top: 0 !important; margin-bottom: 0 !important; }
   }
 </style>
 
