@@ -2784,7 +2784,7 @@
           if (menunggu) teks += ` • ${menunggu} menunggu persetujuan`;
         }
         // 200 = BATAS_LAPORAN di Code.js
-        if (rows.length >= 200) teks += ' (dibatasi 200 baris terbaru — persempit rentang tanggal)';
+        if (rows.length >= 200 && !(tab === 'opname' && this.laporanFilter.status === 'MENUNGGU')) teks += ' (dibatasi 200 baris terbaru — persempit rentang tanggal)';
         return teks;
       },
       // Jumlah satuan dasar yang masuk lewat form +Stok
