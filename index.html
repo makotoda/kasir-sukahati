@@ -1810,9 +1810,9 @@
                            <td class="small text-muted">{{ formatDate(o.Waktu) }}</td>
                            <td>{{ namaToko(o.Cabang) }}</td>
                            <td><span class="fw-bold">{{ o.Nama_Produk }}</span> <span class="text-muted small">({{ o.ID_Produk }})</span><div v-if="o.Catatan" class="small text-muted">{{ o.Catatan }}</div></td>
-                           <td class="text-end">{{ o.Stok_Sistem }}</td>
-                           <td class="text-end fw-bold">{{ o.Stok_Fisik }}</td>
-                           <td class="text-end fw-bold" :class="Number(o.Selisih) > 0 ? 'text-success' : (Number(o.Selisih) < 0 ? 'text-danger' : 'text-muted')">{{ Number(o.Selisih) === 0 ? 'Pas' : formatQty(o.Selisih) }}</td>
+                           <td class="text-end" :title="o.Stok_Sistem">{{ uraiOpname(o.ID_Produk, o.Stok_Sistem) }}</td>
+                           <td class="text-end fw-bold" :title="o.Stok_Fisik">{{ uraiOpname(o.ID_Produk, o.Stok_Fisik) }}</td>
+                           <td class="text-end fw-bold" :title="o.Selisih" :class="Number(o.Selisih) > 0 ? 'text-success' : (Number(o.Selisih) < 0 ? 'text-danger' : 'text-muted')">{{ Number(o.Selisih) === 0 ? 'Pas' : uraiOpname(o.ID_Produk, o.Selisih, true) }}</td>
                            <td>{{ o.Petugas }}</td>
                            <td>
                              <span class="badge" :class="{ MENUNGGU: 'bg-warning text-dark', DISETUJUI: 'bg-success', DITOLAK: 'bg-danger', DIGANTI: 'bg-secondary' }[o.Status]">{{ o.Status }}</span>
@@ -3351,6 +3351,15 @@
         });
         if (sisa > 0) bagian.push(sisa + ' ' + dasar);
         return bagian.join(' + ');
+      },
+
+      // Angka stok opname (satuan dasar) diurai per satuan riil barangnya: 65 -> "3 dus + 5 pak".
+      // Selisih diberi tanda +/-. Barang yang sudah dihapus dari master: angkanya saja.
+      uraiOpname(idProduk, jumlah, bertanda) {
+        const n = Number(jumlah) || 0;
+        const p = this.products.find(x => x.ID_Produk === idProduk);
+        const teks = p ? this.uraiStok(p, Math.abs(n), true) : String(Math.abs(n));
+        return (n < 0 ? '-' : bertanda && n > 0 ? '+' : '') + (n < 0 && teks.includes(' + ') ? '(' + teks + ')' : teks);
       },
 
       // -- PINTASAN KEYBOARD (layar kasir; daftar lengkap di bantuanPintasan) --
