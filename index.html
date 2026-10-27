@@ -3553,6 +3553,23 @@
         cari.focus();
         cari.select();
       },
+      // Stok sistem habis padahal barangnya ada (barang datang belum dicatat): kasir mencatat penjualan
+      // secara manual, jadi tampilkan semua satuan barang ini beserta isinya dalam satuan dasar dan harganya.
+      // Nama dari data barang di-escape karena dipasang sebagai HTML.
+      stokHabis(product) {
+        const esc = s => String(s).replace(/[&<>"']/g, ch => '&#' + ch.charCodeAt(0) + ';');
+        const dasar = esc(product.Satuan_Dasar || 'pcs');
+        const baris = this.satuanBarang(product).map(s => `<tr><td class="text-start">${esc(s.nama)}</td>` +
+          `<td class="text-end">${s.dasar ? '1 ' + dasar + ' (dasar)' : s.isi + ' ' + dasar}</td>` +
+          `<td class="text-end fw-semibold">${s.harga > 0 ? 'Rp ' + this.formatNumber(s.harga) : '-'}</td></tr>`).join('');
+        Swal.fire({
+          icon: 'warning',
+          titleText: 'Stok di sistem habis',
+          html: `<div class="fw-bold mb-1">${esc(product.Nama_Produk)} <span class="text-muted small fw-normal">(${esc(product.ID_Produk)})</span></div>` +
+            `<div class="small text-muted mb-2">Kalau barangnya ada, catat penjualan secara manual dan minta Admin mencatat barang masuk.</div>` +
+            `<table class="table table-sm mb-0 small"><thead><tr><th class="text-start">Satuan</th><th class="text-end">Isi</th><th class="text-end">Harga</th></tr></thead><tbody>${baris}</tbody></table>`
+        });
+      },
       addToCart(product) {
         const satuan = this.satuanBarang(product).find(s => s.harga > 0);
         if (!satuan) {
@@ -3560,7 +3577,7 @@
           return;
         }
         if (this.stokJual(product) <= 0) {
-          this.pesan('Oopss', 'Stok barang ini habis!', 'warning');
+          this.stokHabis(product);
           return;
         }
 
