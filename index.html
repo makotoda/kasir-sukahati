@@ -2486,7 +2486,8 @@
   // cadangan bila jembatan tidak bisa dimuat: jawabannya bergelombang hilang di sisi Google (404 / HTML).
   const idPanggilan = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
   const menungguJawaban = {}; // id panggilan -> penerima jawaban
-  const jembatan = !window.API_URL ? null : new Promise(selesai => {
+  const TAMPILKAN_KAPASITAS = false;
+const jembatan = !window.API_URL ? null : new Promise(selesai => {
     const asalApi = new URL(window.API_URL, location.href).origin;
     // Halaman jembatan disajikan Google dari subdomain googleusercontent.com (preview lokal: dari server lokal)
     const dariJembatan = asal => /^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(asal) || (asal === asalApi && asalApi === location.origin);
@@ -3162,7 +3163,8 @@
         this.loadUsers();
       },
       async loadUsers() {
-        this.api('getKapasitas').then(k => { this.kapasitas = k; }).catch(() => {}); // pelengkap: gagal tidak mengganggu daftar pengguna
+        // ponytail: kartu kapasitas disembunyikan sementara (permintaan pemilik); ubah TAMPILKAN_KAPASITAS jadi true untuk menampilkannya lagi
+        if (TAMPILKAN_KAPASITAS) this.api('getKapasitas').then(k => { this.kapasitas = k; }).catch(() => {}); // pelengkap: gagal tidak mengganggu daftar pengguna
         try {
           this.users = await this.api('getUsers');
         } catch (err) {
