@@ -1344,6 +1344,25 @@
                 <button class="btn btn-primary btn-sm" @click="openUserModal()"><i class="fas fa-user-plus"></i> Tambah Pengguna</button>
               </div>
               <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                <div v-if="kapasitas" class="px-3 py-3 border-bottom">
+                  <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-1">
+                    <strong><i class="fas fa-database me-2"></i>Kapasitas spreadsheet</strong>
+                    <span class="small text-muted">{{ formatNumber(kapasitas.total) }} dari {{ formatNumber(kapasitas.batas) }} sel &bull; <strong :class="kapasitas.persen >= 85 ? 'text-danger' : kapasitas.persen >= 60 ? 'text-warning' : 'text-success'">{{ kapasitas.persen }}%</strong></span>
+                  </div>
+                  <div class="progress my-2" style="height: 8px;" role="progressbar" :aria-valuenow="kapasitas.persen" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" :class="kapasitas.persen >= 85 ? 'bg-danger' : kapasitas.persen >= 60 ? 'bg-warning' : 'bg-success'" :style="{ width: Math.max(1, Math.min(100, kapasitas.persen)) + '%' }"></div>
+                  </div>
+                  <div v-if="kapasitas.persen >= 60" class="small text-danger mb-1">Mendekati batas. Arsipkan data lama atau hapus baris dan kolom kosong di sheet terbesar.</div>
+                  <details class="small">
+                    <summary class="text-muted">Rincian per sheet</summary>
+                    <table class="table table-sm mb-0 mt-1">
+                      <thead><tr><th>Sheet</th><th class="text-end">Baris data</th><th class="text-end">Sel</th><th class="text-end">%</th></tr></thead>
+                      <tbody>
+                        <tr v-for="sh in kapasitas.sheets" :key="sh.nama"><td>{{ sh.nama }}</td><td class="text-end">{{ formatNumber(sh.baris) }}</td><td class="text-end">{{ formatNumber(sh.sel) }}</td><td class="text-end">{{ (sh.sel / kapasitas.batas * 100).toFixed(1) }}</td></tr>
+                      </tbody>
+                    </table>
+                  </details>
+                </div>
                 <div class="table-responsive">
                   <table class="table table-hover align-middle mb-0">
                     <thead class="sticky-top">
@@ -2612,6 +2631,7 @@
 
         // Pengguna (khusus Admin)
         users: [],
+        kapasitas: null, // pemakaian sel spreadsheet (khusus Admin, tab Pengguna)
         showUserModal: false,
         isSavingUser: false,
         isBackup: false,
@@ -3142,6 +3162,7 @@
         this.loadUsers();
       },
       async loadUsers() {
+        this.api('getKapasitas').then(k => { this.kapasitas = k; }).catch(() => {}); // pelengkap: gagal tidak mengganggu daftar pengguna
         try {
           this.users = await this.api('getUsers');
         } catch (err) {
